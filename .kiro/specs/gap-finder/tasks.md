@@ -13,7 +13,7 @@ Implement the smallest compatible local gap-finder path: extend the existing bui
   - [x] 1.2 Refactor `scripts/build_need_scores.py` into typed, testable helpers for canonical district validation, indicator/weight validation, min-max normalization, commitment aggregation, nearest-rank quartile selection, and funding-gap classification.
     - Reuse the shared canonical-ID rule and perform no district inference.
     - _Requirements: 1.2, 1.5–1.7, 2.1–2.6, 3.1–3.7_
-  - [ ]* 1.3 Add focused unit and Hypothesis tests in `agent/tests/test_build_need_scores.py` for district/indicator/weight validation and numeric helpers.
+  - [x]* 1.3 Add focused unit and Hypothesis tests in `agent/tests/test_build_need_scores.py` for district/indicator/weight validation and numeric helpers.
     - **Property 1: Canonical district universe validation** — _Validates: Requirements 1.2, 1.4._
     - **Property 2: Indicator and weight validation rejects invalid numerical inputs** — _Validates: Requirements 1.5–1.7._
     - **Property 3: Normalization and weighted score bounds** — _Validates: Requirements 2.1, 2.3, 2.4, 6.1._
@@ -22,34 +22,34 @@ Implement the smallest compatible local gap-finder path: extend the existing bui
     - **Property 6: Exact-assignment commitment aggregation** — _Validates: Requirements 3.1–3.2._
     - **Property 7: Funding per-capita, quartile, and gap classification** — _Validates: Requirements 3.4–3.7, 6.4._
 
-- [ ] 2. Publish validated, provenance-preserving need-score output
-  - [~] 2.1 Extend `scripts/build_need_scores.py` to load and validate the configured local GeoJSON FeatureCollection, require an exact GeoJSON/indicator district-ID set match, and preserve existing output on every failure.
+- [x] 2. Publish validated, provenance-preserving need-score output
+  - [x] 2.1 Extend `scripts/build_need_scores.py` to load and validate the configured local GeoJSON FeatureCollection, require an exact GeoJSON/indicator district-ID set match, and preserve existing output on every failure.
     - Add/use the local district GeoJSON input and `snapshot_date` source column only as required by the builder contract; do not alter raw or processed project data.
     - _Requirements: 1.1, 1.3–1.4, 4.3–4.6_
-  - [~] 2.2 Implement complete record construction, shared-model validation, ascending district-ID serialization, and same-directory staged-file replacement in `scripts/build_need_scores.py`.
+  - [x] 2.2 Implement complete record construction, shared-model validation, ascending district-ID serialization, and same-directory staged-file replacement in `scripts/build_need_scores.py`.
     - Publish only a complete, valid `need_scores.csv`; retain round-trip-safe score precision and clean up failed staging files.
     - _Requirements: 2.4, 3.3, 4.1–4.2, 4.7–4.8_
   - [x]* 2.3 Add deterministic builder integration cases in `agent/tests/test_build_need_scores.py` for malformed GeoJSON, ID mismatch, matched/unmatched project amounts, provenance/snapshot retention, stable ordering, reproducible rebuilds, and output preservation on validation or staging failure.
     - _Requirements: 1.1–1.7, 3.1–3.3, 4.1–4.8_
 
-- [ ] 3. Add one read-only Pydantic-validated gap data boundary
+- [x] 3. Add one read-only Pydantic-validated gap data boundary
   - [x] 3.1 Create `agent/gaps.py` with `load_gap_records` and `get_gap_record`, complete-file header/row/duplicate validation, deterministic sorting, and typed unavailable/not-found errors.
     - Never return a partial collection and do not recalculate scores or write files.
     - _Requirements: 5.1–5.2, 5.5–5.6_
-  - [~] 3.2 Replace direct CSV handling in `agent/tools/district_need.py` with delegation to `agent.gaps.get_gap_record` while retaining a model-facing docstring and typed unknown-ID behavior.
+  - [x] 3.2 Replace direct CSV handling in `agent/tools/district_need.py` with delegation to `agent.gaps.get_gap_record` while retaining a model-facing docstring and typed unknown-ID behavior.
     - _Requirements: 5.7_
-  - [ ]* 3.3 Add loader and tool tests in `agent/tests/test_gaps.py` for valid records, invalid contract dimensions, bad/missing headers, duplicate IDs, unavailable files, all-or-nothing loading, sorting, and unknown IDs.
+  - [x]* 3.3 Add loader and tool tests in `agent/tests/test_gaps.py` for valid records, invalid contract dimensions, bad/missing headers, duplicate IDs, unavailable files, all-or-nothing loading, sorting, and unknown IDs.
     - **Property 8: District Need Record contract validation** — _Validates: Requirements 5.1–5.2._
     - _Requirements: 5.1–5.2, 5.5–5.7_
 
-- [ ] 4. Expose the gap records through the FastAPI application
-  - [~] 4.1 Add `GET /gaps` with optional `district_id` to the established FastAPI application entrypoint, using shared response models and `agent.gaps` exclusively.
+- [x] 4. Expose the gap records through the FastAPI application
+  - [x] 4.1 Add `GET /gaps` with optional `district_id` to the established FastAPI application entrypoint, using shared response models and `agent.gaps` exclusively.
     - Return sorted collections or one matching record with HTTP 200; map unknown IDs to readable HTTP 404 and unavailable/invalid complete data to readable HTTP 503.
     - _Requirements: 5.3–5.6_
-  - [ ]* 4.2 Add route tests in `agent/tests/test_gaps.py` for collection, known filtered record, unknown record, and missing/malformed source error mappings.
+  - [x]* 4.2 Add route tests in `agent/tests/test_gaps.py` for collection, known filtered record, unknown record, and missing/malformed source error mappings.
     - _Requirements: 5.3–5.6_
 
-- [~] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
