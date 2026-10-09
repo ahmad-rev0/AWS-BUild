@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "prompt-evidence-log",
+      "description": "Append every submitted prompt (timestamp + first 300 chars) to .kiro/evidence/prompt-log.md as evidence of how Kiro was used, for the Technical Implementation pitch.",
+      "trigger": "PromptSubmit",
+      "action": { "type": "command", "command": "python3 scripts/hooks/prompt_log.py" },
+      "timeout": 10,
+      "enabled": true
+    }
+  ]
+}

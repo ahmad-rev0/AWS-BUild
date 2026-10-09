@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Log Submitted Prompts",
+      "trigger": "UserPromptSubmit",
+      "description": "Logs each submitted prompt for project evidence.",
+      "action": {
+        "type": "command",
+        "command": "python3 scripts/hooks/prompt_log.py",
+        "timeout": 60
+      }
+    }
+  ]
+}

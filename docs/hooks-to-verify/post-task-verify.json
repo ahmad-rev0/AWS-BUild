@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "post-task-acceptance-check",
+      "description": "After each spec task completes, verify it against its linked EARS acceptance criteria and run only the related tests.",
+      "trigger": "PostTaskExecution",
+      "action": {
+        "type": "agent",
+        "prompt": "A spec task just finished. Look up the requirement IDs it references in the spec's requirements.md, list each acceptance criterion as met / not met with evidence (test name or file:line), and run only the tests related to this task. If anything is not met, say so and stop; do not start the next task."
+      },
+      "enabled": true
+    }
+  ]
+}

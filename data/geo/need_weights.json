@@ -1,0 +1,7 @@
+{
+  "_note": "Weights for need_score (sum to 1). Adjust and document in pitch; see sdg11-domain steering.",
+  "population_density": 0.25,
+  "informal_settlement_share": 0.35,
+  "flood_exposure": 0.25,
+  "transport_access_gap": 0.15
+}

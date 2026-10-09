@@ -1,0 +1,23 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "python-quality",
+      "description": "Lint and format Python with ruff after the agent edits a .py file. Free (shell command, no credits).",
+      "trigger": "PostFileSave",
+      "matcher": "\\.py$",
+      "action": { "type": "command", "command": "sh scripts/hooks/py_quality.sh" },
+      "timeout": 60,
+      "enabled": true
+    },
+    {
+      "name": "typescript-quality",
+      "description": "Type-check the frontend after the agent edits a .ts/.tsx file; errors flow back to the agent.",
+      "trigger": "PostFileSave",
+      "matcher": "frontend/src/.*\\.(ts|tsx)$",
+      "action": { "type": "command", "command": "sh scripts/hooks/ts_quality.sh" },
+      "timeout": 90,
+      "enabled": true
+    }
+  ]
+}

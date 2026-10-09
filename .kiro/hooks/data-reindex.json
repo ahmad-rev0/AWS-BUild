@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "data-reindex",
+      "description": "When the agent saves a processed dataset or geo file, rebuild the Chroma vector index so search never runs on stale data. No-op until scripts/build_index.py exists.",
+      "trigger": "PostFileSave",
+      "matcher": "data/(processed|geo)/.*\\.(csv|json|geojson)$",
+      "action": { "type": "command", "command": "python3 scripts/hooks/reindex.py" },
+      "timeout": 300,
+      "enabled": true
+    }
+  ]
+}

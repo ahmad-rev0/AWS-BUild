@@ -1,0 +1,20 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "git-checkpoint",
+      "description": "When the agent finishes a turn, offer to commit a git checkpoint (in addition to Kiro checkpoints) so any account can resume from a clean commit.",
+      "trigger": "Stop",
+      "action": { "type": "command", "command": "sh scripts/hooks/checkpoint.sh" },
+      "timeout": 30,
+      "enabled": true,
+      "confirm": {
+        "question": "Commit a git checkpoint of this turn's changes?",
+        "options": [
+          { "id": "yes", "label": "Commit", "run": true },
+          { "id": "no", "label": "Skip", "run": false }
+        ]
+      }
+    }
+  ]
+}

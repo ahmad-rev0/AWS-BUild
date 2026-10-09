@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "aws-docs": {
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "env": { "FASTMCP_LOG_LEVEL": "ERROR", "AWS_DOCUMENTATION_PARTITION": "aws" },
+      "disabled": false,
+      "autoApprove": ["search_documentation", "read_documentation", "recommend"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "disabled": false,
+      "autoApprove": []
+    },
+    "atlas11-data": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp<2", "python", "scripts/mcp/atlas11_data_server.py"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["search_projects", "get_project", "dataset_stats"]
+    },
+    "strands-agents": {
+      "command": "uvx",
+      "args": ["strands-agents-mcp-server"],
+      "env": { "FASTMCP_LOG_LEVEL": "INFO" },
+      "disabled": true,
+      "autoApprove": ["search_docs", "fetch_doc"]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "disabled": true,
+      "autoApprove": []
+    }
+  }
+}

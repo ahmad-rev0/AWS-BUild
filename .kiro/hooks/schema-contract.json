@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "schema-contract-sync",
+      "description": "When agent/schemas.py changes, keep the frontend types and API docs in sync with the Pydantic contract.",
+      "trigger": "PostFileSave",
+      "matcher": "agent/schemas\\.py$",
+      "action": {
+        "type": "agent",
+        "prompt": "agent/schemas.py just changed. With minimal edits: (1) update frontend/src/types/api.ts so every Pydantic model used in API responses has a matching TypeScript type; (2) check agent/app.py routes still use the right models; (3) if ClashReport/Verdict/Memo changed, update data/demo_cache files' shape or tell me which ones are now invalid. Do not change behaviour. Report the files touched in one line."
+      },
+      "enabled": true
+    }
+  ]
+}

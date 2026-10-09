@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "prompt-regression-eval",
+      "description": "Every time an agent system prompt is saved, run the quick golden-pair eval and append the result to .kiro/evidence/eval-history.csv. Output (accuracy, failures) goes back into the agent's context so regressions are caught immediately.",
+      "trigger": "PostFileSave",
+      "matcher": "agent/prompts/.*\\.md$",
+      "action": { "type": "command", "command": "python3 scripts/hooks/eval_quick.py" },
+      "timeout": 240,
+      "enabled": true
+    }
+  ]
+}

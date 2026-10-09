@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "aws-expiry-watch",
+      "description": "After any shell command, detect expired AWS workshop credentials in the output and tell the agent to stop and ask for a refresh instead of 'fixing' working code.",
+      "trigger": "PostToolUse",
+      "matcher": "shell",
+      "action": { "type": "command", "command": "python3 scripts/hooks/aws_expiry_watch.py" },
+      "timeout": 10,
+      "enabled": true
+    }
+  ]
+}
