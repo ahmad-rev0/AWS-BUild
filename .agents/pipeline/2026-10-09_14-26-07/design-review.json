@@ -4,37 +4,42 @@
     {
       "number": 1,
       "severity": "HIGH",
-      "location": "FastAPI API and Error Model endpoint table; Frontend Architecture / VerdictCard",
-      "problem": "GET /reviews/{review_id} is specified to return both a bare ClashReport and a ReviewReportResponse envelope.",
-      "fix": "Choose ReviewReportResponse { report: ClashReport, candidates: list[ReviewCandidateDetail] } as the sole response model and update the endpoint table, server, parser, and tests."
+      "title": "Cached candidate resolution is inconsistent with the seeded-project source",
+      "where": "Read-only canonical registries; Review orchestration and cached service; existing agent/tools/get_project.py and agent/tools/check_overlap.py",
+      "problem": "The cache and registry use seeded_projects.csv, but existing lookup and overlap tools read only projects.csv. The design does not require replacing those lookups, so cached candidate identities and deterministic facts cannot reliably resolve.",
+      "fix": "Require every project lookup, overlap check, and report resolver to use one registry-backed get_registered_project(project_id) boundary, and test canonical cached candidate resolution and provenance."
     },
     {
       "number": 2,
       "severity": "HIGH",
-      "location": "Cached Demo Service; FastAPI API and Error Model",
-      "problem": "Review execution is assigned to the events stream, while cache/provider errors are assigned to POST review creation; concurrent pending stream and replay/failure behavior is undefined.",
-      "fix": "Persist PENDING/RUNNING/COMPLETED/FAILED state and atomically claim execution; define POST, concurrent stream, completed replay, and failed-review terminal behavior consistently."
+      "title": "Lazy SSE execution lacks disconnect and cancellation recovery",
+      "where": "Baseline and chosen architecture; SQLite changes and invariants; FastAPI and SSE contract",
+      "problem": "A first consumer atomically claims PENDING to RUNNING, while later consumers receive 409. No rule handles disconnected/cancelled executors, so a review can remain RUNNING forever with no terminal event or replayable result.",
+      "fix": "Specify a durable executor/finally failure policy or a persisted expiring lease with reclaim behavior; define reconnect behavior and test disconnect, executor exception, and exactly-one-terminal-event invariants."
     },
     {
       "number": 3,
       "severity": "MEDIUM",
-      "location": "Shared Contracts and Persistence; Data Pipeline, Providers, and Retrieval; Cached Demo Service",
-      "problem": "Regex-shaped canonical IDs are not validated against an authoritative city, district, or project registry, despite unknown-ID requirements.",
-      "fix": "Define read-only validated district/project registries, city-ID semantics, endpoint rejection statuses, and cache-reference validation rules."
+      "title": "Cache identity semantics contradict the specified Pydantic normalization",
+      "where": "Schema changes / canonical demo fingerprint paragraph",
+      "problem": "The design promises rejecting any changed/omitted/null field but compares parsed ProposalCreate values. Actual ProposalCreate strips whitespace and applies defaults, so it cannot distinguish all described wire changes.",
+      "fix": "Choose semantic normalized equality or introduce an exact raw-payload/key-presence canonicalization contract, then add tests for whitespace and omitted/default/null behavior."
     },
     {
       "number": 4,
       "severity": "MEDIUM",
-      "location": "Data Pipeline, Providers, and Retrieval",
-      "problem": "The final retrieval filter names, date-window shape, one-sided-window semantics, and validation responses are unspecified.",
-      "fix": "Define one Pydantic SearchRequest with k <= 8, city_id, optional district_id, sector, and named implementation_start/implementation_end fields plus explicit interval rules."
+      "title": "Proposal source URL preservation is missing from the shared contract",
+      "where": "Schema changes; CachedScenario; frontend provenance presentation",
+      "problem": "ProposalCreate/Proposal has no source_url even though requirements require available proposal provenance to be preserved and displayed. Existing golden-pair proposal URLs are ignored.",
+      "fix": "Add source_url: str | None to ProposalCreate and carry it through cache, SQLite, API/TypeScript contracts, parsers, and provenance UI with a seeded URL rule."
     },
     {
       "number": 5,
       "severity": "MEDIUM",
-      "location": "Shared Contracts and Persistence; Cached Demo Service",
-      "problem": "The canonical cache proposal identity/content guard and fingerprint serialization are not defined.",
-      "fix": "Store the exact ProposalCreate and a documented SHA-256 canonical JSON fingerprint in the cache; require exact equality before assigning demo-proposal-01 and test altered/missing fields."
+      "title": "Cache proposal identity and deterministic tool input handoff is undefined",
+      "where": "CachedScenario; Review orchestration and cached service",
+      "problem": "CachedScenario stores ProposalCreate, but deterministic check_overlap requires persisted Proposal. The design neither represents proposal_id in the cache schema nor specifies constructing the stored Proposal before tools execute.",
+      "fix": "Add canonical proposal_id to CachedScenario, fingerprint its ProposalCreate body, construct/persist Proposal with submitted_at before review execution, and require tools to receive that persisted proposal."
     }
   ]
 }

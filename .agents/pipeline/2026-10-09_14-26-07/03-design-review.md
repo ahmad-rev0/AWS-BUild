@@ -1,67 +1,74 @@
 # Design Review — Atlas11 MVP Completion
 
-**Verdict: CHANGES_REQUESTED** — 2 HIGH and 3 MEDIUM findings.
+## Verdict: CHANGES_REQUESTED
 
-## Findings
-
-1. **HIGH — `GET /reviews/{review_id}` has two incompatible response contracts.**
-   - **Where:** “FastAPI API and Error Model” endpoint table specifies success as `ClashReport`; “Frontend Architecture / VerdictCard” later specifies `ReviewReportResponse { report, candidates }` for the same endpoint.
-   - **Problem:** A frontend implemented to the latter cannot parse the table’s former response. This violates the shared typed-contract requirement and leaves report retrieval, API response models, and SSE follow-up behavior ambiguous.
-   - **Concrete fix:** Choose one contract and use it everywhere. For example:
+1. **HIGH — Cached candidate resolution is inconsistent with the proposed seeded-project source.**
+   - **Where:** “Read-only canonical registries” and “Review orchestration and cached service” say cached candidates are held in `data/processed/seeded_projects.csv`; “Data pipeline” says `agent/registry.py` loads that file. But the design says `get_project`, `check_overlap`, and the other tools “continue,” without requiring them to use the registry. The actual `agent/tools/get_project.py` and `agent/tools/check_overlap.py` each read only `data/processed/projects.csv`; they cannot resolve a seeded candidate from the separate file. `agent/tools/search_similar_projects.py` also currently invokes retrieval without the design’s city/district/sector/date filters. Consequently, the canonical report cannot reliably populate `ReviewCandidateDetail` or deterministic facts for its seeded candidates.
+   - **Concrete fix:** Make a single registry-backed project lookup mandatory for *all* tool and report resolution paths, and define the source precedence/error behavior. For example:
      ```python
-     class ReviewReportResponse(BaseModel):
-         report: ClashReport
-         candidates: list[ReviewCandidateDetail]
+     # agent/registry.py
+     def get_registered_project(project_id: str) -> Project:
+         return load_project_registry()[project_id]  # raise ProjectNotFoundError
 
-     @app.get("/reviews/{review_id}", response_model=ReviewReportResponse)
-     def get_review(review_id: str) -> ReviewReportResponse: ...
+     # agent/tools/get_project.py and check_overlap.py
+     project = get_registered_project(project_id)
      ```
-     Update the endpoint table, frontend parser, smoke test, and acceptance tests to name `ReviewReportResponse`; do not describe this endpoint as returning a bare `ClashReport`.
+     Update `search_similar_projects` to accept the validated `SearchRequest`/proposal filter context, and add cached-mode tests proving both canonical candidate IDs resolve from `seeded_projects.csv`, including their provenance.
 
-2. **HIGH — The review execution/claim point conflicts with its stated errors and permits undefined concurrent stream behavior.**
-   - **Where:** “Cached Demo Service” says cache parsing and review execution occur in `GET /reviews/{review_id}/events`; the API table assigns cache/provider failures to `POST /proposals/{proposal_id}/review` (503/502); the same section says a completed stream may replay or return a conflict, without choosing either.
-   - **Problem:** These alternatives have materially different observable behavior. If `POST` only inserts a pending review, it cannot return a cache-validation 503. If two clients open the event endpoint while pending, the design does not define an atomic claim, so both can run providers/attempt completion and produce nondeterministic tool/audit events. A failed pending review also has no specified durable execution status or retry rule.
-   - **Concrete fix:** Define and persist an execution state (`PENDING | RUNNING | COMPLETED | FAILED`) and a transactional `claim_review_execution(review_id)` operation. Specify one model, e.g. `POST` creates only `PENDING` (201); the first events request atomically claims it and emits any cache/provider failure as its single terminal `error`; concurrent requests receive 409 while `RUNNING`; `COMPLETED` replays the stored immutable event sequence; `FAILED` replays its stored terminal error (or explicitly permits a new review ID, not retry in place). Change the endpoint table to match that choice and add concurrent-consumer/error-order tests.
+2. **HIGH — The lazy SSE execution design has no disconnect/cancellation recovery rule, so a claimed review can remain `RUNNING` forever.**
+   - **Where:** “Baseline and chosen architecture,” “SQLite changes and invariants,” and “FastAPI and SSE contract.” The first SSE caller atomically changes `PENDING → RUNNING`; subsequent callers receive `409`; only normal completion/failure writes a terminal event. The design never defines what happens when that caller disconnects, the request task is cancelled, or serialization/yielding fails after the claim. That violates the required recoverable cached flow and can leave no consumer able to receive a terminal event or replay a report.
+   - **Concrete fix:** Specify one durable execution policy and its transaction/error behavior. A minimal option that preserves lazy execution is:
+     ```text
+     execute_claimed_review(review_id) runs independently of the response iterator.
+     It appends every event transactionally. In a broad finally/exception handler it calls
+     fail_review(..., terminal_error) unless the review is COMPLETED; fail_review is idempotent
+     and appends the sole terminal event. A reconnect during RUNNING receives the already
+     persisted prefix and waits/polls for subsequent events rather than 409.
+     ```
+     Alternatively add a persisted lease with expiry and an atomic reclaim rule. Define which option is used, the client response while another executor owns the review, and tests for disconnect-before-terminal, executor exception, and exactly one terminal persisted event.
 
-3. **MEDIUM — Canonical-ID validation is only a syntax check; the design never defines authoritative registries or when unknown city/district/project IDs are rejected.**
-   - **Where:** “Shared Contracts and Persistence,” “Data Pipeline, Providers, and Retrieval,” and “Cached Demo Service.”
-   - **Problem:** The existing `CanonicalContract` accepts any regex-shaped value; it does not prove a city or district exists. The design requires canonical filters and says cache parsing rejects unknown project/district IDs, but does not identify a project/district registry, the lookup function, or proposal/retrieval behavior for unknown city/district IDs. Consequently two valid-looking but nonexistent IDs can enter SQLite and make the cache/map flow fail late.
-   - **Concrete fix:** Define a read-only registry boundary and its rules. For example: `load_district_registry()` loads the validated GeoJSON/need-score ID intersection; `load_project_registry()` loads validated processed plus seeded projects. `POST /proposals` returns 422 for a city/district absent from the relevant registry (except an explicitly documented city-only proposal); cached report validation returns 503 only for corrupted local cache references; live search with an unknown filter returns 422. State exactly how `city_id` is represented/validated, since current GeoJSON contains districts rather than a city registry.
+3. **MEDIUM — The canonical cache identity rule promises byte-level field-change rejection but the specified validation path cannot enforce it.**
+   - **Where:** “Schema changes,” canonical fingerprint paragraph. The design says any changed title, optional null/omitted field, or other field must return `422`, but first parses requests as `ProposalCreate`, whose actual `model_config` has `str_strip_whitespace=True` and defaults `source="user"`; parsed model equality/fingerprints erase leading/trailing whitespace and cannot distinguish an omitted default from an explicitly supplied default. Therefore multiple requests the design describes as changed will be accepted as identical.
+   - **Concrete fix:** Choose semantic canonical equality *or* define and implement an exact-wire identity contract. For exact-wire identity, validate a raw request object with required-key presence, reject unknown/missing/extra keys, and fingerprint a canonical JSON object that retains the presence policy before Pydantic normalization. For semantic equality, replace the contradictory sentence with: “Inputs are normalized by `ProposalCreate`; equivalent normalized payloads are accepted,” and list the normalized fields in the API contract. Add tests for whitespace and omitted-versus-explicit optional/default fields matching the selected rule.
 
-4. **MEDIUM — Retrieval’s public filter contract is not fully specified.**
-   - **Where:** “Data Pipeline, Providers, and Retrieval.”
-   - **Problem:** The design says `SearchFilters` will add `sector` and use “inclusive implementation window,” but it never declares the final field names/types or whether a one-sided interval is supported. The current implementation exposes four distinct `approval_date_*`/`closing_date_*` filters, no `sector`, and permits `k` through 100. Multiple implementations could satisfy the prose yet filter different projects.
-   - **Concrete fix:** Replace the prose with a single Pydantic input contract, e.g.:
+4. **MEDIUM — Proposal provenance is not fully specified in the shared contract, despite a requirement to preserve available source URLs.**
+   - **Where:** “Schema changes,” `CachedScenario`, and the frontend provenance presentation. The design requires proposal source provenance to be displayed and claims source URLs are preserved, but it does not add `source_url` to `ProposalCreate`/`Proposal` or state where a canonical seeded proposal’s URL is persisted. The actual `ProposalCreate` has `source` but no `source_url`, while existing golden-pair input already contains proposal-level `source_url` (currently ignored by the model). The frontend cannot truthfully display this provenance through `ReviewReportResponse`.
+   - **Concrete fix:** Add an optional validated URL field to the shared proposal contract and carry it through cache, SQLite payloads, API responses, and TypeScript parsers:
      ```python
-     class SearchRequest(BaseModel):
-         query: str = Field(min_length=1, max_length=10_000)
-         k: int = Field(ge=1, le=8)
-         city_id: CanonicalId
-         district_id: CanonicalId | None = None
-         sector: str = Field(min_length=1)
-         implementation_start: date | None = None
-         implementation_end: date | None = None
+     class ProposalCreate(CanonicalContract):
+         # ...
+         source: Literal["seeded", "user"] = "user"
+         source_url: str | None = None
      ```
-     Require both dates when either is provided (or explicitly define one-sided semantics), map proposal dates to that interval, and state the exact metadata comparisons and 400/422 error response.
+     Define the seeded rule (for example, canonical cache requires `source_url="seeded://atlas11/demo-city-transit-01"`; user proposals may omit it), and add a frontend test that displays it when present.
 
-5. **MEDIUM — The deterministic cache’s proposal identity guard is not implementable from the design.**
-   - **Where:** “Shared Contracts and Persistence” and “Cached Demo Service.”
-   - **Problem:** The server is to assign `demo-proposal-01` only when input “matches the cached proposal identity/content guard,” and the cache is to contain a “proposal fingerprint/identity,” but neither the canonical proposal payload nor the fingerprint algorithm/canonical serialization is defined. Different whitespace, decimal/date JSON rendering, or an omitted optional field could yield incompatible guards; a loose implementation could let altered seeded content claim the fixed ID.
-   - **Concrete fix:** Put an explicit `proposal: ProposalCreate` and `proposal_fingerprint` in the cache schema, define `fingerprint = sha256(json.dumps(proposal.model_dump(mode="json", exclude_none=False), sort_keys=True, separators=(",", ":")))`, and require exact model equality plus fingerprint equality before assigning `demo-proposal-01`. Return 422 for a nonmatching seeded canonical scenario and persist the cache’s canonical `ProposalCreate` rather than client text. Add tests for modified title, source, budget, dates, omitted optionals, and deterministic matching.
+5. **MEDIUM — Cached review preparation does not define the proposal/date representation needed by the existing deterministic overlap tool.**
+   - **Where:** “CachedScenario” uses `proposal: ProposalCreate`; “Review orchestration and cached service” validates registries before execution; and “Read-only canonical registries” says the cache has a canonical proposal payload with ID `demo-proposal-01`. The actual `check_overlap` input requires a persisted `Proposal` with `proposal_id` and `submitted_at`, whereas `ProposalCreate` contains neither. The design does not say whether deterministic facts are evaluated against the persisted proposal, how the cache’s ID is represented without violating the cache schema, or whether cached reports avoid `check_overlap` altogether.
+   - **Concrete fix:** Define the cache/persistence handoff explicitly. Prefer a cache contract with `proposal_id` and a `ProposalCreate` body, then construct the persisted `Proposal` once with server `submitted_at` before review execution:
+     ```python
+     class CachedScenario(BaseModel):
+         scenario_key: Literal["demo-city-transit-01"]
+         proposal_id: Literal["demo-proposal-01"]
+         proposal: ProposalCreate
+         # ...
+     ```
+     State that cache fingerprinting applies to `proposal`, and that deterministic tools receive `store.get_proposal(review.proposal_id)`. Add a test proving the cached report ID, stored proposal ID, `done` reference, and tool facts all use `demo-proposal-01`.
 
 ## Verified Assumptions
 
-- `agent/app.py` currently exposes only `GET /gaps`, with typed `DistrictNeedRecord` output and 404/503 mapping for the gap boundary.
-- `agent/store.py` already atomically creates proposals/reviews, atomically persists a completed report while transitioning `SUBMITTED → REVIEWED`, and sanitizes audit summaries. It does **not** currently enforce approver role inside `record_approval`, so the proposed defensive extension is necessary.
-- `agent/schemas.py` currently rejects `Memo.redirect_district_id` unless recommendation is `REDIRECT`; the design correctly identifies the conflict with the required cached `CO_FINANCE` report and must change the validator as stated.
-- `agent/embeddings.py` uses `SentenceTransformer(..., local_files_only=True)` for local embeddings and configures Bedrock connect/read timeouts of 20 seconds with retries disabled. `agent/errors.py` already defines the required credential-expiry message and maps the specified AWS error codes.
-- `scripts/build_index.py` already validates processed and optional seeded CSV inputs independently, rejects duplicate IDs across accepted inputs, uses deterministic project hashes, reconciles incremental Chroma records, and atomically publishes the manifest after successful Chroma mutations.
-- The five named deterministic tool files (`search_similar_projects.py`, `get_project.py`, `check_overlap.py`, `district_need.py`, and `draft_memo.py`) exist under `agent/tools/`.
-- `agent/gaps.py` is a read-only loader that validates complete CSV rows, sorts by district ID, and maps missing/malformed data through typed errors; `scripts/build_need_scores.py` validates GeoJSON/indicator district-universe equality and atomically publishes need scores.
+- `agent/app.py` currently exposes only `GET /gaps`, so the design correctly identifies the need to add the proposal, review, SSE, report, approval, and audit endpoints.
+- `agent/schemas.py` is a Pydantic v2 shared contract boundary and already provides core `Proposal`, `Verdict`, `Memo`, `ClashReport`, approval, audit, and SSE models.
+- The current `Memo` validator permits `redirect_district_id` only for `REDIRECT`; the design correctly identifies that this must change to support the required cached `CO_FINANCE` report with a map-focus target.
+- `agent/store.py` currently has transactional proposal/review completion/approval persistence and audit sanitization, but no execution-status or persisted review-event table; the proposed additional lifecycle persistence is needed.
+- `agent/gaps.py` is read-only and validates/sorts generated gap records. `scripts/build_need_scores.py` validates district-universe equality and atomically replaces the generated CSV, so retaining those boundaries is feasible.
+- `agent/embeddings.py` uses `SentenceTransformer(..., local_files_only=True)` for local embeddings and constructs Bedrock clients with 20-second connect/read timeouts. `agent/config.py` reloads `agent/.env` on each `PipelineConfig.from_environment()` call.
+- `scripts/build_index.py` already separates optional seeded input, validates rows, rejects duplicate IDs, uses deterministic hashes, removes stale IDs for incremental builds, and atomically publishes its manifest after index operations.
+- `agent/clash_agent.py`, `scripts/check_aws.py`, `frontend/`, and `data/demo_cache/` do not currently exist, consistent with the baseline statement.
+- The current local GeoJSON has only `district_id`; it lacks the proposed `district_name` and `city_id`. The design’s planned GeoJSON metadata update is therefore necessary. Existing need-score records are explicitly illustrative and use `TBD: needs source`.
 
 ## Unverified/Wrong Assumptions
 
-- **Wrong:** Current `agent/retrieval.py` does not meet the planned final retrieval contract: it permits `k` up to 100, has no `sector` filter, and exposes separate approval/closing date-bound fields rather than one defined implementation window. The design must specify the migration (Finding 4).
-- **Wrong:** `scripts/check_aws.py`, `agent/clash_agent.py`, `data/demo_cache/`, and `frontend/` do not currently exist. They are valid planned additions, but must not be described as existing baseline assets.
-- **Unverified by the design:** No authoritative city/district/project registry is identified for its “unknown cached project/district” and canonical-ID claims. Existing Pydantic canonical validation establishes format only, not existence (Finding 3).
-- **Unverified by the design:** There is no specified persisted review execution state or event-sequence store to support the proposed completed-stream replay/terminal behavior (Finding 2).
+- **Wrong:** The design implies existing project tools can continue while the canonical candidates reside in a separate seeded CSV. They cannot: both current project lookup and overlap checking load only `projects.csv`.
+- **Wrong:** The proposed parsed-model fingerprint/equality check can distinguish every changed, null, or omitted submitted field. Pydantic normalization/defaulting in the actual `ProposalCreate` contract makes that impossible without a raw-payload presence contract.
+- **Unverified:** No existing source supports the design’s claim that a Vite React plugin version is “matching” the listed frontend versions. Select and pin the exact `@vitejs/plugin-react` version in the implementation/lockfile rather than leaving “matching” as an unresolved dependency choice.
+- **Unverified:** The design assumes an asynchronously claimed SSE review will continue to a terminal persisted state after a client disconnect. No current lifecycle/executor implementation exists, and the design does not yet supply the required cancellation/recovery behavior.
