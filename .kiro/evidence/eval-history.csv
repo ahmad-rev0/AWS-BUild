@@ -1,1 +1,2 @@
 timestamp,prompt_hash,model_id,n,accuracy,dup_precision,hard_negative_accuracy
+2026-10-09T05:44:04.268929+00:00,93356465ad65,deterministic-eval-v1,6,0.6667,1.0000,1.0000

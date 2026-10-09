@@ -18,10 +18,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from agent.config import PipelineConfig
-from agent.embeddings import EmbeddingProvider, create_embedding_provider
-from agent.errors import EmbeddingProviderError, MissingDataError
-from agent.schemas import IndexReport, Project, RejectedRow
+from agent.config import PipelineConfig  # noqa: E402
+from agent.embeddings import EmbeddingProvider, create_embedding_provider  # noqa: E402
+from agent.errors import EmbeddingProviderError, MissingDataError  # noqa: E402
+from agent.schemas import IndexReport, Project, RejectedRow  # noqa: E402
 
 MANIFEST_NAME = "index_manifest.json"
 
@@ -70,7 +70,6 @@ def load_projects(
             continue
         with path.open(newline="", encoding="utf-8") as source:
             for row_number, row in enumerate(csv.DictReader(source), start=2):
-                project_id = row.get("project_id") or None
                 source_value = (row.get("source") or "").strip()
                 if seeded_file and source_value != "seeded":
                     rejected.append(
@@ -216,8 +215,12 @@ def build_index(
         if not incremental
         or old_hashes.get(project.project_id) != current_hashes[project.project_id]
     ]
-    vectors = provider.embed_documents(
-        [canonical_embedding_text(project) for project in changed]
+    vectors = (
+        provider.embed_documents(
+            [canonical_embedding_text(project) for project in changed]
+        )
+        if changed
+        else []
     )
     if len(vectors) != len(changed) or any(not vector for vector in vectors):
         raise EmbeddingProviderError(

@@ -98,8 +98,7 @@ def test_incremental_skips_unchanged_and_deletes_stale(
     assert first.indexed == 1
     assert second.indexed == 0
     assert second.skipped_unchanged == 1
-    assert len(provider.calls) == 2
-    assert provider.calls[-1] == []
+    assert len(provider.calls) == 1
     assert manifest["projects"]
     assert collection.upserts == [["P-1"]]
 

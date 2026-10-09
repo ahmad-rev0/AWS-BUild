@@ -14,7 +14,9 @@ if not Path("data/eval/golden_pairs.jsonl").exists():
     )
     sys.exit(0)
 r = subprocess.run(
-    [sys.executable, "-m", "agent.eval", "--quick"], capture_output=True, text=True
+    [sys.executable, "-m", "agent.eval", "--quick", "--fail-on-regression"],
+    capture_output=True,
+    text=True,
 )
 print(r.stdout[-2500:])
 if r.returncode:
