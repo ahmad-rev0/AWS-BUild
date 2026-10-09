@@ -5,9 +5,12 @@ from __future__ import annotations
 import csv
 import json
 import math
+import os
 import sys
+import tempfile
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
+from datetime import date
 from pathlib import Path
 from typing import Final
 
@@ -15,12 +18,14 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from agent.schemas import CANONICAL_ID_PATTERN  # noqa: E402
+from agent.schemas import CANONICAL_ID_PATTERN, DistrictNeedRecord  # noqa: E402
 
+DISTRICTS_GEOJSON_PATH: Final = ROOT / "data" / "geo" / "districts.geojson"
 INDICATORS_PATH: Final = ROOT / "data" / "geo" / "district_indicators.csv"
 PROJECTS_PATH: Final = ROOT / "data" / "processed" / "projects.csv"
 WEIGHTS_PATH: Final = ROOT / "data" / "geo" / "need_weights.json"
 OUTPUT_PATH: Final = ROOT / "data" / "geo" / "need_scores.csv"
+DISTRICT_ID_PROPERTY: Final = "district_id"
 
 OUTPUT_FIELDS: Final = (
     "district_id",
@@ -220,19 +225,135 @@ def classify_funding_gap(
     return need_score >= 0.6 and commitments_per_capita <= quartile_threshold
 
 
+def load_geojson_district_ids(path: Path) -> list[str]:
+    """Load unique canonical district IDs from the configured local FeatureCollection."""
+    try:
+        with path.open(encoding="utf-8") as geojson_file:
+            document = json.load(geojson_file)
+    except OSError as error:
+        raise ValueError(f"Unable to read district GeoJSON {path}: {error}") from error
+    except json.JSONDecodeError as error:
+        raise ValueError(f"District GeoJSON {path} is not valid JSON") from error
+
+    if not isinstance(document, dict) or document.get("type") != "FeatureCollection":
+        raise ValueError("District GeoJSON must be a FeatureCollection")
+    features = document.get("features")
+    if not isinstance(features, list):
+        raise ValueError(
+            "District GeoJSON FeatureCollection must contain a features array"
+        )
+
+    district_ids: list[str] = []
+    for feature_number, feature in enumerate(features, start=1):
+        if not isinstance(feature, dict) or feature.get("type") != "Feature":
+            raise ValueError(f"District GeoJSON feature {feature_number} is invalid")
+        properties = feature.get("properties")
+        district_id = (
+            properties.get(DISTRICT_ID_PROPERTY)
+            if isinstance(properties, dict)
+            else None
+        )
+        if (
+            not isinstance(district_id, str)
+            or not district_id
+            or not CANONICAL_ID_PATTERN.fullmatch(district_id)
+        ):
+            raise ValueError(
+                f"District GeoJSON feature {feature_number} has an invalid canonical "
+                f"{DISTRICT_ID_PROPERTY}"
+            )
+        district_ids.append(district_id)
+
+    if len(set(district_ids)) != len(district_ids):
+        raise ValueError("District GeoJSON must have unique canonical district IDs")
+    return district_ids
+
+
+def validate_district_universe(
+    geojson_ids: Iterable[str], indicator_ids: Iterable[str]
+) -> None:
+    """Require exact canonical district-ID agreement without inferred mappings."""
+    geojson_set, indicator_set = set(geojson_ids), set(indicator_ids)
+    missing_from_geojson = sorted(indicator_set - geojson_set)
+    extra_in_geojson = sorted(geojson_set - indicator_set)
+    if missing_from_geojson or extra_in_geojson:
+        details: list[str] = []
+        if missing_from_geojson:
+            details.append(f"missing from GeoJSON: {missing_from_geojson}")
+        if extra_in_geojson:
+            details.append(f"extra in GeoJSON: {extra_in_geojson}")
+        raise ValueError("District ID sets differ; " + "; ".join(details))
+
+
+def validate_snapshot_dates(rows: Sequence[CsvRow]) -> dict[str, str]:
+    """Preserve source dates or explicitly mark unavailable snapshot dates."""
+    snapshot_dates: dict[str, str] = {}
+    for row_number, row in enumerate(rows, start=2):
+        district_id = row.get("district_id", "")
+        value = row.get("snapshot_date", "")
+        if not value or not value.strip():
+            snapshot_dates[district_id] = "TBD: needs source"
+            continue
+        if value == "TBD: needs source":
+            snapshot_dates[district_id] = value
+            continue
+        try:
+            date.fromisoformat(value)
+        except ValueError as error:
+            raise ValueError(
+                f"snapshot_date is invalid for district_id={district_id!r} "
+                f"at indicator row {row_number}"
+            ) from error
+        snapshot_dates[district_id] = value
+    return snapshot_dates
+
+
+def _write_output_rows(output_path: Path, rows: Sequence[Mapping[str, str]]) -> None:
+    """Publish complete CSV rows atomically without overwriting committed output early."""
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            newline="",
+            encoding="utf-8",
+            dir=output_path.parent,
+            prefix=f".{output_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as output_file:
+            temporary_path = Path(output_file.name)
+            writer = csv.DictWriter(
+                output_file, fieldnames=OUTPUT_FIELDS, lineterminator="\n"
+            )
+            writer.writeheader()
+            writer.writerows(rows)
+            output_file.flush()
+            os.fsync(output_file.fileno())
+        temporary_path.replace(output_path)
+    except OSError as error:
+        raise ValueError(f"Unable to publish need scores: {error}") from error
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()
+
+
 def build_need_scores(
+    districts_geojson_path: Path = DISTRICTS_GEOJSON_PATH,
     indicators_path: Path = INDICATORS_PATH,
     projects_path: Path = PROJECTS_PATH,
     weights_path: Path = WEIGHTS_PATH,
     output_path: Path = OUTPUT_PATH,
 ) -> list[dict[str, str]]:
     """Write deterministic local need scores without allocating unmatched project funding."""
+    geojson_ids = load_geojson_district_ids(districts_geojson_path)
     indicators = _read_rows(indicators_path)
     if not indicators:
         raise ValueError("District indicator data must contain at least one district")
+    district_ids = validate_canonical_district_ids(indicators)
+    validate_district_universe(geojson_ids, district_ids)
     weights = _load_weights(weights_path, indicators[0])
     raw_values = validate_indicator_rows(indicators, weights)
-    district_ids = validate_canonical_district_ids(indicators)
+    snapshot_dates = validate_snapshot_dates(indicators)
     populations = {
         district_id: _float(
             row,
@@ -254,34 +375,48 @@ def build_need_scores(
     }
     quartile_threshold = nearest_rank_bottom_quartile(list(funding_per_capita.values()))
 
-    output_rows: list[dict[str, str]] = []
+    records: list[DistrictNeedRecord] = []
     for indicator in sorted(indicators, key=lambda row: row["district_id"]):
         district_id = indicator["district_id"]
         need_score = need_scores[district_id]
-        amount = commitments[district_id]
-        output_rows.append(
-            {
-                "district_id": district_id,
-                "district_name": indicator.get("district_name", ""),
-                "need_score": str(need_score),
-                "funded_commitments_usd": str(amount),
-                "commitments_per_capita": str(funding_per_capita[district_id]),
-                "funding_gap": str(
-                    classify_funding_gap(
-                        need_score, funding_per_capita[district_id], quartile_threshold
-                    )
-                ).lower(),
-                "indicator_quality": indicator.get("indicator_quality", ""),
-                "snapshot_date": "",
-                "source": indicator.get("source", ""),
-                "source_url": indicator.get("source_url", ""),
-            }
+        records.append(
+            DistrictNeedRecord.model_validate(
+                {
+                    "district_id": district_id,
+                    "district_name": indicator.get("district_name", ""),
+                    "need_score": need_score,
+                    "funded_commitments_usd": commitments[district_id],
+                    "commitments_per_capita": funding_per_capita[district_id],
+                    "funding_gap": classify_funding_gap(
+                        need_score,
+                        funding_per_capita[district_id],
+                        quartile_threshold,
+                    ),
+                    "indicator_quality": indicator.get("indicator_quality", ""),
+                    "snapshot_date": snapshot_dates[district_id],
+                    "source": indicator.get("source", ""),
+                    "source_url": indicator.get("source_url", ""),
+                }
+            )
         )
 
-    with output_path.open("w", newline="", encoding="utf-8") as output_file:
-        writer = csv.DictWriter(output_file, fieldnames=OUTPUT_FIELDS)
-        writer.writeheader()
-        writer.writerows(output_rows)
+    output_rows = [
+        {
+            "district_id": record.district_id,
+            "district_name": record.district_name,
+            "need_score": str(record.need_score),
+            "funded_commitments_usd": str(record.funded_commitments_usd),
+            "commitments_per_capita": str(record.commitments_per_capita),
+            "funding_gap": str(record.funding_gap).lower(),
+            "indicator_quality": record.indicator_quality.value,
+            "snapshot_date": record.snapshot_date,
+            "source": record.source,
+            "source_url": record.source_url,
+        }
+        for record in records
+    ]
+
+    _write_output_rows(output_path, output_rows)
     return output_rows
 
 

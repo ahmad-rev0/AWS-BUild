@@ -33,7 +33,7 @@ Implement the smallest compatible local gap-finder path: extend the existing bui
     - _Requirements: 1.1–1.7, 3.1–3.3, 4.1–4.8_
 
 - [ ] 3. Add one read-only Pydantic-validated gap data boundary
-  - [~] 3.1 Create `agent/gaps.py` with `load_gap_records` and `get_gap_record`, complete-file header/row/duplicate validation, deterministic sorting, and typed unavailable/not-found errors.
+  - [x] 3.1 Create `agent/gaps.py` with `load_gap_records` and `get_gap_record`, complete-file header/row/duplicate validation, deterministic sorting, and typed unavailable/not-found errors.
     - Never return a partial collection and do not recalculate scores or write files.
     - _Requirements: 5.1–5.2, 5.5–5.6_
   - [~] 3.2 Replace direct CSV handling in `agent/tools/district_need.py` with delegation to `agent.gaps.get_gap_record` while retaining a model-facing docstring and typed unknown-ID behavior.

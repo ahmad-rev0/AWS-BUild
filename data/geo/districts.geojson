@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "district_id": "atlas11-demo-district-low"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district_id": "atlas11-demo-district-high"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[1, 0], [1, 1], [2, 1], [2, 0], [1, 0]]]
+      }
+    }
+  ]
+}
