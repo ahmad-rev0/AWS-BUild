@@ -10,7 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from agent.errors import ProjectNotFoundError
 from agent.schemas import CanonicalContract, Project
 
-PROJECT_SOURCE_PATH = Path(__file__).resolve().parents[2] / "data" / "processed" / "projects.csv"
+PROJECT_SOURCE_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "processed" / "projects.csv"
+)
 
 
 class GetProjectInput(CanonicalContract):

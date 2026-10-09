@@ -13,7 +13,9 @@ from pydantic import BaseModel, Field
 from agent.schemas import OverlapFacts, Project, Proposal
 
 
-_PROJECTS_PATH = Path(__file__).resolve().parents[2] / "data" / "processed" / "projects.csv"
+_PROJECTS_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "processed" / "projects.csv"
+)
 _BENEFICIARY_PATTERNS: dict[str, tuple[str, ...]] = {
     "commuters": ("commuter", "passenger", "transit user"),
     "households": ("household", "resident", "community"),
@@ -64,7 +66,9 @@ def check_overlap(proposal: Proposal, project_id: str) -> OverlapFacts:
         validated.proposal.district_id is not None and project.district is not None
     )
     same_city = validated.proposal.city_id == project.city
-    same_district = districts_known and validated.proposal.district_id == project.district
+    same_district = (
+        districts_known and validated.proposal.district_id == project.district
+    )
     dates_known = (
         validated.proposal.start_date is not None
         and validated.proposal.end_date is not None
@@ -86,7 +90,9 @@ def check_overlap(proposal: Proposal, project_id: str) -> OverlapFacts:
     shared_beneficiaries = _shared_beneficiaries(
         proposal_beneficiaries, project_beneficiaries
     )
-    shared_outputs = _concrete_outputs_in(proposal_text) & _concrete_outputs_in(project_text)
+    shared_outputs = _concrete_outputs_in(proposal_text) & _concrete_outputs_in(
+        project_text
+    )
 
     matching_attributes: list[str] = []
     if same_city:
@@ -123,7 +129,9 @@ def _load_project(project_id: str) -> Project:
                 if row.get("project_id") == project_id:
                     return Project.model_validate(row)
     except OSError as error:
-        raise ProjectNotFoundError(f"Local project source is unavailable: {project_id}") from error
+        raise ProjectNotFoundError(
+            f"Local project source is unavailable: {project_id}"
+        ) from error
 
     raise ProjectNotFoundError(f"Project not found: {project_id}")
 
@@ -142,11 +150,10 @@ def _periods_overlap_with_slack(
     assert proposal_end is not None
     assert project_start is not None
     assert project_end is not None
-    return (
-        _add_calendar_months(proposal_start, -12)
-        <= _add_calendar_months(project_end, 12)
-        and _add_calendar_months(project_start, -12)
-        <= _add_calendar_months(proposal_end, 12)
+    return _add_calendar_months(proposal_start, -12) <= _add_calendar_months(
+        project_end, 12
+    ) and _add_calendar_months(project_start, -12) <= _add_calendar_months(
+        proposal_end, 12
     )
 
 

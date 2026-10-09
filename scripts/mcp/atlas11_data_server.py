@@ -5,6 +5,7 @@ Lets Kiro (and the data-steward agent) look up real projects while labelling eva
 writing seeded proposals or debugging verdicts, without pasting CSVs into chat.
 Run by Kiro via .kiro/settings/mcp.json:  uv run --with "mcp<2" python scripts/mcp/atlas11_data_server.py
 """
+
 import csv
 from collections import Counter
 from pathlib import Path
@@ -12,7 +13,10 @@ from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
 ROOT = Path(__file__).resolve().parents[2]
-FILES = [ROOT / "data/processed/projects.csv", ROOT / "data/processed/seeded_projects.csv"]
+FILES = [
+    ROOT / "data/processed/projects.csv",
+    ROOT / "data/processed/seeded_projects.csv",
+]
 mcp = FastMCP("atlas11-data")
 
 
@@ -33,12 +37,22 @@ def search_projects(query: str, city: str = "", limit: int = 10) -> list[dict]:
     for r in _rows():
         if city and r.get("city", "").lower() != city.lower():
             continue
-        hay = " ".join([r.get("name", ""), r.get("description", ""), r.get("themes", "")]).lower()
+        hay = " ".join(
+            [r.get("name", ""), r.get("description", ""), r.get("themes", "")]
+        ).lower()
         s = sum(hay.count(t) for t in terms)
         if s:
             scored.append((s, r))
     scored.sort(key=lambda x: -x[0])
-    keys = ["project_id", "name", "funder", "city", "amount_usd", "approval_date", "source"]
+    keys = [
+        "project_id",
+        "name",
+        "funder",
+        "city",
+        "amount_usd",
+        "approval_date",
+        "source",
+    ]
     return [{k: r.get(k, "") for k in keys} for _, r in scored[:limit]]
 
 
@@ -59,7 +73,9 @@ def dataset_stats() -> dict:
         "total": len(rows),
         "by_source": Counter(r.get("source", "") for r in rows),
         "by_funder": Counter(r.get("funder", "") for r in rows),
-        "top_cities": Counter(r.get("city") or "(untagged)" for r in rows).most_common(15),
+        "top_cities": Counter(r.get("city") or "(untagged)" for r in rows).most_common(
+            15
+        ),
     }
 
 

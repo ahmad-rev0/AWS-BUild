@@ -8,7 +8,9 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 
-NEED_SCORES_PATH = Path(__file__).resolve().parents[2] / "data" / "geo" / "need_scores.csv"
+NEED_SCORES_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "geo" / "need_scores.csv"
+)
 
 
 class DistrictNeedInput(BaseModel):
@@ -65,8 +67,12 @@ def district_need(district_id: str) -> DistrictNeedOutput:
             return DistrictNeedOutput(
                 district_id=requested.district_id,
                 need_score=float(row["need_score"]),
-                funded_commitments_usd=_optional_non_negative_float(row, "funded_commitments_usd"),
-                commitments_per_capita=_optional_non_negative_float(row, "commitments_per_capita"),
+                funded_commitments_usd=_optional_non_negative_float(
+                    row, "funded_commitments_usd"
+                ),
+                commitments_per_capita=_optional_non_negative_float(
+                    row, "commitments_per_capita"
+                ),
                 funding_gap=(row.get("funding_gap", "").strip().lower() == "true")
                 if row.get("funding_gap", "").strip()
                 else None,

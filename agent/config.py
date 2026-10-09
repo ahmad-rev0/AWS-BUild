@@ -44,7 +44,9 @@ class PipelineConfig:
         """Load current environment values and optional agent/.env values for one invocation."""
 
         load_dotenv(root / "agent" / ".env", override=True)
-        provider_value = os.getenv("EMBEDDINGS_PROVIDER", EmbeddingsProvider.LOCAL.value)
+        provider_value = os.getenv(
+            "EMBEDDINGS_PROVIDER", EmbeddingsProvider.LOCAL.value
+        )
         try:
             provider = EmbeddingsProvider(provider_value.strip().lower())
         except ValueError as error:
@@ -63,8 +65,12 @@ class PipelineConfig:
             bedrock_embedding_model_id=os.getenv(
                 "BEDROCK_EMBEDDING_MODEL_ID", DEFAULT_BEDROCK_EMBEDDING_MODEL_ID
             ),
-            bedrock_nova_model_id=os.getenv("BEDROCK_NOVA_MODEL_ID", DEFAULT_BEDROCK_NOVA_MODEL_ID),
-            aws_region=os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", DEFAULT_AWS_REGION)),
+            bedrock_nova_model_id=os.getenv(
+                "BEDROCK_NOVA_MODEL_ID", DEFAULT_BEDROCK_NOVA_MODEL_ID
+            ),
+            aws_region=os.getenv(
+                "AWS_REGION", os.getenv("AWS_DEFAULT_REGION", DEFAULT_AWS_REGION)
+            ),
             chroma_path=chroma_path,
             chroma_collection=os.getenv("CHROMA_COLLECTION", DEFAULT_CHROMA_COLLECTION),
             demo_mode=os.getenv("DEMO_MODE"),

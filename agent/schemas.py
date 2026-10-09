@@ -26,7 +26,9 @@ class CanonicalContract(BaseModel):
 
         for field_name, value in values.items():
             if field_name.endswith("_id") and value is not None:
-                if not isinstance(value, str) or not CANONICAL_ID_PATTERN.fullmatch(value):
+                if not isinstance(value, str) or not CANONICAL_ID_PATTERN.fullmatch(
+                    value
+                ):
                     raise ValueError(f"{field_name} must be a stable canonical ID")
             if field_name == "source" and value is not None:
                 if not isinstance(value, str) or value not in SOURCE_LABELS:
@@ -185,7 +187,11 @@ class ProposalCreate(CanonicalContract):
     @model_validator(mode="after")
     def dates_are_ordered(self) -> "ProposalCreate":
         """Reject an implementation end date before its start date."""
-        if self.start_date is not None and self.end_date is not None and self.end_date < self.start_date:
+        if (
+            self.start_date is not None
+            and self.end_date is not None
+            and self.end_date < self.start_date
+        ):
             raise ValueError("end_date must not precede start_date")
         return self
 
@@ -236,8 +242,13 @@ class Memo(CanonicalContract):
     @model_validator(mode="after")
     def redirect_has_redirect_recommendation(self) -> "Memo":
         """Allow a redirect district only when redirecting coordination focus."""
-        if self.redirect_district_id is not None and self.recommendation is not Recommendation.REDIRECT:
-            raise ValueError("redirect_district_id is only allowed for REDIRECT recommendations")
+        if (
+            self.redirect_district_id is not None
+            and self.recommendation is not Recommendation.REDIRECT
+        ):
+            raise ValueError(
+                "redirect_district_id is only allowed for REDIRECT recommendations"
+            )
         return self
 
 

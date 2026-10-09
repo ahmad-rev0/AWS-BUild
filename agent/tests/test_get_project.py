@@ -1,6 +1,8 @@
 """Focused tests for the canonical local project lookup tool."""
 
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 import pytest
 from hypothesis import given, strategies as st
@@ -44,14 +46,18 @@ def test_get_project_rejects_invalid_or_absent_ids(
         project_tool.get_project("P-404")
 
 
-@given(st.from_regex(r"P-[0-9]{3}", fullmatch=True).filter(lambda project_id: project_id != "P-001"))
+@given(
+    st.from_regex(r"P-[0-9]{3}", fullmatch=True).filter(
+        lambda project_id: project_id != "P-001"
+    )
+)
 def test_get_project_never_fabricates_a_missing_canonical_project(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, project_id: str
+    project_id: str,
 ) -> None:
     """Validates: Requirements 3.5."""
-    source_path = tmp_path / "projects.csv"
-    source_path.write_text(FIXTURE_PROJECTS, encoding="utf-8")
-    monkeypatch.setattr(project_tool, "PROJECT_SOURCE_PATH", source_path)
-
-    with pytest.raises(ProjectNotFoundError):
-        project_tool.get_project(project_id)
+    with TemporaryDirectory() as directory:
+        source_path = Path(directory) / "projects.csv"
+        source_path.write_text(FIXTURE_PROJECTS, encoding="utf-8")
+        with patch.object(project_tool, "PROJECT_SOURCE_PATH", source_path):
+            with pytest.raises(ProjectNotFoundError):
+                project_tool.get_project(project_id)

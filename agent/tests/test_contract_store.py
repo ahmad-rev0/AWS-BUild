@@ -138,7 +138,9 @@ def test_contracts_reject_invalid_dates_and_preserve_seeded_source() -> None:
     assert valid.source == "seeded"
 
 
-def test_create_proposal_persists_submitted_record_and_intake_audit(store: SQLiteStore) -> None:
+def test_create_proposal_persists_submitted_record_and_intake_audit(
+    store: SQLiteStore,
+) -> None:
     """Proposal insertion retains canonical fields, status, provenance, and audit data."""
     inserted = create_submitted_proposal(store)
 
@@ -185,7 +187,9 @@ def test_complete_review_rolls_back_report_and_status_when_audit_insert_fails(
         store.get_completed_report("review-01")
 
 
-def test_record_approval_persists_terminal_decision_and_audit(store: SQLiteStore) -> None:
+def test_record_approval_persists_terminal_decision_and_audit(
+    store: SQLiteStore,
+) -> None:
     """An approver decision is stored with the terminal proposal transition and audit row."""
     create_submitted_proposal(store)
     create_pending_review(store)
@@ -202,6 +206,7 @@ def test_record_approval_persists_terminal_decision_and_audit(store: SQLiteStore
             )
         ],
     )
+    assert store.get_proposal("proposal-01").status is ProposalStatus.REVIEWED
     approval = Approval(
         approval_id="approval-01",
         review_id="review-01",
@@ -212,19 +217,22 @@ def test_record_approval_persists_terminal_decision_and_audit(store: SQLiteStore
         decided_at=NOW,
     )
 
-    assert store.record_approval(
-        approval,
-        Role.APPROVER,
-        audit(
-            "audit-approval-01",
-            "approval_accepted",
-            proposal_id="proposal-01",
-            review_id="review-01",
-            approval_id="approval-01",
-            actor="approver-01",
-            role=Role.APPROVER,
-        ),
-    ) == approval
+    assert (
+        store.record_approval(
+            approval,
+            Role.APPROVER,
+            audit(
+                "audit-approval-01",
+                "approval_accepted",
+                proposal_id="proposal-01",
+                review_id="review-01",
+                approval_id="approval-01",
+                actor="approver-01",
+                role=Role.APPROVER,
+            ),
+        )
+        == approval
+    )
     assert store.get_proposal("proposal-01").status is ProposalStatus.APPROVED
     approval_events = store.list_audit(proposal_id="proposal-01", review_id="review-01")
     assert any(
@@ -235,7 +243,9 @@ def test_record_approval_persists_terminal_decision_and_audit(store: SQLiteStore
     )
 
 
-def test_list_audit_returns_sanitized_rows_with_required_identifiers(store: SQLiteStore) -> None:
+def test_list_audit_returns_sanitized_rows_with_required_identifiers(
+    store: SQLiteStore,
+) -> None:
     """Audit reads redact secret-like values while retaining durable trace identifiers."""
     store.append_audit(
         AuditEvent(

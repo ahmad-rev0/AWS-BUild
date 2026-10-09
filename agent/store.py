@@ -134,11 +134,14 @@ class SQLiteStore:
     def get_proposal(self, proposal_id: str) -> Proposal:
         """Return one validated persisted proposal by its canonical ID."""
         row = self._fetchone(
-            "SELECT payload_json FROM proposals WHERE proposal_id = ?", (proposal_id,)
+            "SELECT status, payload_json FROM proposals WHERE proposal_id = ?",
+            (proposal_id,),
         )
         if row is None:
             raise StoreNotFoundError("Proposal not found.")
-        return self._model("Proposal").model_validate_json(row["payload_json"])
+        payload = json.loads(row["payload_json"])
+        payload["status"] = row["status"]
+        return self._model("Proposal").model_validate(payload)
 
     def create_review(
         self,
@@ -224,12 +227,18 @@ class SQLiteStore:
         payload = self._dump(approval)
         with self._transaction() as connection:
             review = connection.execute(
-                "SELECT proposal_id, report_json FROM reviews WHERE review_id = ?", (payload["review_id"],)
+                "SELECT proposal_id, report_json FROM reviews WHERE review_id = ?",
+                (payload["review_id"],),
             ).fetchone()
             if review is None:
                 raise StoreNotFoundError("Review not found.")
-            if review["proposal_id"] != payload["proposal_id"] or review["report_json"] is None:
-                raise StoreConflictError("Approval does not reference a completed proposal review.")
+            if (
+                review["proposal_id"] != payload["proposal_id"]
+                or review["report_json"] is None
+            ):
+                raise StoreConflictError(
+                    "Approval does not reference a completed proposal review."
+                )
             updated = connection.execute(
                 """
                 UPDATE proposals SET status = ?
@@ -283,7 +292,8 @@ class SQLiteStore:
         where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
         with self._connect() as connection:
             rows = connection.execute(
-                f"SELECT * FROM audit_events{where} ORDER BY timestamp, event_id", values
+                f"SELECT * FROM audit_events{where} ORDER BY timestamp, event_id",
+                values,
             ).fetchall()
         audit_model = self._model("AuditEvent")
         return [audit_model.model_validate(dict(row)) for row in rows]
@@ -311,7 +321,9 @@ class SQLiteStore:
         with self._connect() as connection:
             return connection.execute(statement, values).fetchone()
 
-    def _insert_audit(self, connection: sqlite3.Connection, audit_event: AuditEvent) -> None:
+    def _insert_audit(
+        self, connection: sqlite3.Connection, audit_event: AuditEvent
+    ) -> None:
         payload = self._dump(audit_event)
         summary = self._sanitize_summary(str(payload["payload_summary"]))
         try:
