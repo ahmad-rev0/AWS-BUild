@@ -1,0 +1,301 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Extend `agent/schemas.py` with typed Pydantic contracts for proposal intake/persistence, statuses, role, review creation, all four verdict labels, memo recommendations, `ClashReport`, approvals, SSE events, overlap facts, and audit events.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298491
+      },
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522307648
+      },
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522553536
+      }
+    ],
+    "1.2 Add model validators for ordered proposal dates, finite confidence in `[0,1]`, non-empty rejection reasons, redirect-only memo district, and stable canonical IDs/source labels.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298567
+      },
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522307731
+      },
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522553621
+      }
+    ],
+    "1.3 Implement `agent/store.py` SQLite schema and typed repository operations for proposals, reviews, approvals, and append-only audit events, including transactional completion/approval writes.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298603
+      },
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522307785
+      },
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522553672
+      }
+    ],
+    "1.4 Add focused contract/store tests for validation, proposal insertion, atomic review completion, approval persistence, and sanitized audit rows.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298634
+      }
+    ],
+    "2.1 Add `agent/tools/search_similar_projects.py` with a model-facing docstring, Pydantic input/output, `k <= 8` enforcement, and shared retrieval delegation returning IDs/scores only.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298668
+      }
+    ],
+    "2.2 Add `agent/tools/get_project.py` with a model-facing docstring, Pydantic input/output, canonical lookup, provenance preservation, and typed not-found failure.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298700
+      }
+    ],
+    "2.3 Add `agent/tools/check_overlap.py` with a model-facing docstring and deterministic canonical city/district, sector/beneficiary, concrete-output, and inclusive 12-month date-slack facts.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298733
+      }
+    ],
+    "2.4 Add `agent/tools/district_need.py` and `agent/tools/draft_memo.py`, each with a model-facing docstring and Pydantic contracts; keep redirects explicitly non-financial.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298767
+      }
+    ],
+    "2.5 Implement post-processing validator logic that enforces geographic/time/district severity constraints, conservative missing-date behavior, evidence consolidation, bounded confidence, and the duplicate-to-overlapping downgrade plus audit event.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298819
+      }
+    ],
+    "2.6 Add unit tests for each tool and every taxonomy rule, including city mismatch, known/unknown districts, missing/boundary dates, shared beneficiaries, concrete outputs, and duplicate evidence downgrade.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298867
+      }
+    ],
+    "2.7 Add required Hypothesis properties for overlap symmetry, cross-city final-label exclusion, duplicate evidence minimum, and verdict label/confidence closure.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298901
+      }
+    ],
+    "3.1 Create `agent/prompts/clash_system.md` containing the concise taxonomy, structured-output contract, and model-role constraints; do not place prompt content in Python.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298933
+      }
+    ],
+    "3.2 Create `agent/clash_agent.py` with exactly one Strands `Agent`, loading the prompt file and Nova Pro model configuration from refreshed environment values.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522298966
+      }
+    ],
+    "3.3 Implement live candidate selection: filter on city, optional district, sector, and implementation window; retrieve at most eight and send at most five deterministic candidate packages to Nova Pro.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299000
+      }
+    ],
+    "3.4 Implement 20-second Bedrock timeout, `ClashReport` parse attempt, exactly one validation-feedback retry, readable second-failure error, and only post-validation taxonomy enforcement.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299033
+      }
+    ],
+    "3.5 Reuse credential mapping and refresh dotenv/boto3 session per live request or credential failure; map expired tokens to the exact HTTP-503-ready `CredentialsExpired` message without logging secrets.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299067
+      }
+    ],
+    "3.6 Add mocked orchestration tests for success, candidate cap, valid report, retry-success, retry-failure, tool failure, timeout, and credentials expiry.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299101
+      }
+    ],
+    "4.1 Create `agent/app.py` with `POST /proposals`, `POST /proposals/{id}/review`, `GET /reviews/{id}/events`, `GET /reviews/{id}`, `POST /approvals`, and `GET /audit`, using only shared Pydantic response payloads.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299135
+      }
+    ],
+    "4.2 Implement review lifecycle guards: only `SUBMITTED` proposals create reviews; valid completed reports move `SUBMITTED -> REVIEWED` atomically; failures retain `SUBMITTED`; report retrieval exposes only validated completed reports.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299166
+      }
+    ],
+    "4.3 Implement SSE serialization and event choreography: `status -> tool_call(s) -> verdict(s) -> done`, or `error` instead of `done`; include tool name/duration and final review reference.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299200
+      }
+    ],
+    "4.4 Implement API exception mapping for not-found, conflict, validation, denied role, agent schema failure, cache unavailability, tool errors, and exact expired-credential 503 JSON body.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299241
+      }
+    ],
+    "4.5 Add FastAPI/SSE tests for all endpoint responses, lifecycle failures, payload shapes, success/error ordering, validated report retrieval, and credential-expiry output.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299283
+      }
+    ],
+    "4.6 Add required Hypothesis properties for approval state-machine reachability and SSE ordering/terminal-event exclusivity.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299317
+      }
+    ],
+    "5.1 Implement approval transitions permitting only `role=approver` to move `REVIEWED -> APPROVED | REJECTED`, requiring a reason for rejection and preventing repeat/skip transitions.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299350
+      }
+    ],
+    "5.2 Ensure every proposal, review, tool call, verdict, downgrade, completion/failure, approval/rejection attempt, and successful decision appends the required ID/actor/role/timestamp/summary audit data.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299383
+      }
+    ],
+    "5.3 Add tests that denied transitions leave status unchanged, approval never triggers financial behavior, and `GET /audit` filters and redacts secrets correctly.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299416
+      }
+    ],
+    "6.1 Add the canonical seeded cache payload under `data/demo_cache/` for `scenario_key=demo-city-transit-01` and `proposal_id=demo-proposal-01`, with source label, valid report, one `OVERLAPPING`, one `COMPLEMENTARY`, `CO_FINANCE`, and redirect district ID.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299451
+      }
+    ],
+    "6.2 Route `DEMO_MODE=cached` at the API layer to parse and serve the local cache without constructing/invoking Bedrock or live retrieval; return an actionable error if cache data is missing or invalid.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299484
+      }
+    ],
+    "6.3 Provide deterministic/local approval and redirect/gap response state for the canonical scenario, retaining the rule that redirect changes coordination focus only.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299516
+      }
+    ],
+    "6.4 Add cached-mode tests with AWS/retrieval mocks that fail if called, then assert deterministic report, valid SSE order, seeded source, approval/rejection behavior, redirect state, and cache-error preservation.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299549
+      }
+    ],
+    "7.1 Create `agent/eval.py` to load labelled `data/eval/golden_pairs.jsonl`, run deterministic/agent classification evaluation, and append timestamped summaries to `.kiro/evidence/eval-history.csv`.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299582
+      }
+    ],
+    "7.2 Implement `--quick` to evaluate only the first six valid pairs and full mode to evaluate all valid pairs, with useful label-level results and readable malformed-pair reporting.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299621
+      }
+    ],
+    "7.3 Add/obtain at least 12 human-labelled pairs spanning every verdict, city/date boundaries, missing dates, district mismatch, and the canonical demo; preserve seeded/fetched provenance.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299656
+      }
+    ],
+    "7.4 Add evaluation tests and run the narrow quick evaluation. Confirm prompt-file changes use the existing regression hook and do not reduce golden-pair accuracy without review.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299690
+      }
+    ],
+    "8.1 Add `scripts/demo_smoke.py` that runs the canonical submit → cached review → SSE → report → approver action → redirect/gap flow without AWS or Chroma.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299722
+      }
+    ],
+    "8.2 Add the minimal shared-schema smoke test covering pipeline project IDs, API Pydantic payloads, and frontend-facing serialized review IDs; use it as the end-to-end integration gate.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299757
+      }
+    ],
+    "8.3 Run the changed `pytest` unit/property/API suites and cached demo smoke test inside the activated venv; run Ruff format/lint for changed Python files.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299839
+      }
+    ],
+    "8.4 Record only factual results and blockers in evidence; do not claim that seeded records, redirect state, or approval created funding or impact.": [
+      {
+        "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
+        "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
+        "timestamp": 1791522299873
+      }
+    ]
+  }
+}
