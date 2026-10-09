@@ -1,0 +1,37 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: Atlas11 SDG 11 coordination control room
+    - generic [ref=e6]:
+      - text: Role
+      - combobox "Role" [ref=e7]:
+        - option "Planner" [selected]
+        - option "Approver"
+    - button "Review memo" [ref=e8] [cursor=pointer]
+  - generic [ref=e9]:
+    - complementary [ref=e10]:
+      - generic [ref=e11]: Seeded for demo · illustrative local data
+      - heading "New proposal" [level=2] [ref=e12]
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - text: Title
+          - textbox "Title" [ref=e15]: Demo City accessible transit corridor
+        - generic [ref=e16]:
+          - text: Description
+          - textbox "Description" [ref=e17]: Seeded demonstration proposal for accessible bus corridor stops serving commuters in the high-need district.
+        - generic [ref=e18]:
+          - text: Budget (USD)
+          - textbox "Budget (USD)" [ref=e19]: "24000000"
+        - button "Run cached review" [active] [ref=e20] [cursor=pointer]
+      - paragraph [ref=e34]: Failed to fetch
+      - heading "Verdicts" [level=2] [ref=e21]
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic:
+          - generic [ref=e24]:
+            - button "Zoom in" [ref=e25] [cursor=pointer]: +
+            - button "Zoom out" [ref=e26] [cursor=pointer]: −
+          - generic [ref=e27]:
+            - link "Leaflet" [ref=e28] [cursor=pointer]:
+              - /url: https://leafletjs.com
+            - text: "| © OpenStreetMap contributors"
+      - generic [ref=e33]: "Need score mapIllustrative indicators · snapshot: TBD: needs sourceHigh-need district focus is coordination only; it does not allocate funding."
