@@ -152,6 +152,45 @@ class VerdictLabel(StrEnum):
     UNRELATED = "UNRELATED"
 
 
+class IndicatorQuality(StrEnum):
+    """Source quality retained for district indicators and derived gap records."""
+
+    MEASURED = "measured"
+    ESTIMATED = "estimated"
+    ILLUSTRATIVE = "illustrative"
+
+
+class DistrictNeedRecord(CanonicalContract):
+    """Validated, provenance-preserving district funding-gap record."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    district_id: str = Field(min_length=1)
+    district_name: str = Field(min_length=1)
+    need_score: float = Field(ge=0.0, le=1.0, allow_inf_nan=False)
+    funded_commitments_usd: float = Field(ge=0.0, allow_inf_nan=False)
+    commitments_per_capita: float = Field(ge=0.0, allow_inf_nan=False)
+    funding_gap: bool
+    indicator_quality: IndicatorQuality
+    snapshot_date: str
+    source: str = Field(min_length=1)
+    source_url: str = Field(min_length=1)
+
+    @field_validator("snapshot_date")
+    @classmethod
+    def snapshot_date_is_calendar_date_or_tbd(cls, value: str) -> str:
+        """Accept only an ISO calendar date or the explicit unknown-date marker."""
+        if value == "TBD: needs source":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as error:
+            raise ValueError(
+                "snapshot_date must be an ISO calendar date or 'TBD: needs source'"
+            ) from error
+        return value
+
+
 class Recommendation(StrEnum):
     """Coordination actions that a review memo may recommend."""
 

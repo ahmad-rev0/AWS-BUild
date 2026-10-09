@@ -1,0 +1,88 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Extend `agent/schemas.py` with the `IndicatorQuality` type and `DistrictNeedRecord` Pydantic contract, including canonical-ID, finite/bounded numeric, non-empty provenance, and ISO-date-or-`TBD: needs source` validation.": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502520
+      },
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525509669
+      },
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525592211
+      }
+    ],
+    "1.2 Refactor `scripts/build_need_scores.py` into typed, testable helpers for canonical district validation, indicator/weight validation, min-max normalization, commitment aggregation, nearest-rank quartile selection, and funding-gap classification.": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502564
+      },
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525509729
+      },
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525592314
+      }
+    ],
+    "2.1 Extend `scripts/build_need_scores.py` to load and validate the configured local GeoJSON FeatureCollection, require an exact GeoJSON/indicator district-ID set match, and preserve existing output on every failure.": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502597
+      }
+    ],
+    "2.2 Implement complete record construction, shared-model validation, ascending district-ID serialization, and same-directory staged-file replacement in `scripts/build_need_scores.py`.": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502676
+      }
+    ],
+    "3.1 Create `agent/gaps.py` with `load_gap_records` and `get_gap_record`, complete-file header/row/duplicate validation, deterministic sorting, and typed unavailable/not-found errors.": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502711
+      }
+    ],
+    "3.2 Replace direct CSV handling in `agent/tools/district_need.py` with delegation to `agent.gaps.get_gap_record` while retaining a model-facing docstring and typed unknown-ID behavior.": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502746
+      }
+    ],
+    "4.1 Add `GET /gaps` with optional `district_id` to the established FastAPI application entrypoint, using shared response models and `agent.gaps` exclusively.": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502779
+      }
+    ],
+    "5. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525502813
+      }
+    ],
+    "1. Establish shared gap contracts and deterministic builder helpers": [
+      {
+        "executionId": "19f78e37-576c-4bd7-976d-63879e28879f",
+        "chatSessionId": "sess_18bcb820-e1a2-480d-8060-c910ccf42b1a",
+        "timestamp": 1791525592346
+      }
+    ]
+  }
+}
