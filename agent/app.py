@@ -21,10 +21,14 @@ from agent.catalog import (
     CatalogProject,
     CatalogSummary,
     CatalogUnavailableError,
+    CatalogRecommendation,
     compare_catalog,
     list_projects,
+    funding_impact,
+    _place_key,
     named_city,
     projects_by_ids,
+    recommend_catalog,
     summary as catalog_summary,
 )
 from agent.gaps import (
@@ -462,19 +466,59 @@ def post_catalog_compare(payload: CatalogCompareRequest) -> CatalogCompareRespon
         raise HTTPException(status_code=503, detail=str(error)) from error
 
 
+@app.post("/catalog/recommend", response_model=CatalogRecommendation)
+def post_catalog_recommend(payload: CatalogCompareRequest) -> CatalogRecommendation:
+    """Rank named cities by proposal fit and existing World Bank coverage. Does not direct funds."""
+    try:
+        return recommend_catalog(payload)
+    except CatalogUnavailableError as error:
+        raise _catalog_error(error) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+def _human_decision(item: CatalogCommitRequest, city: str) -> tuple[str | None, str, str]:
+    choice = item.human_choice.strip().lower() or "unreviewed"
+    if choice not in {"accepted", "override", "unreviewed"}:
+        raise HTTPException(status_code=422, detail="human_choice must be accepted, override, or unreviewed.")
+    recommended = item.recommended_city.strip() if item.recommended_city else None
+    note = " ".join(item.decision_note.split())
+    if choice == "unreviewed":
+        return None, "unreviewed", ""
+    if not recommended:
+        raise HTTPException(status_code=422, detail="A recommendation is required before accepting or overriding it.")
+    same = _place_key(city) == _place_key(recommended)
+    if choice == "accepted" and not same:
+        raise HTTPException(status_code=422, detail="Accept applies only to the recommended city.")
+    if choice == "override" and same:
+        choice = "accepted"
+    if choice == "override" and len(note) < 8:
+        raise HTTPException(status_code=422, detail="Add a short reason for choosing a different city.")
+    return recommended, choice, note if choice == "override" else ""
+
+
 def _commitment_from_row(row: dict[str, object]) -> CatalogCommitment:
     project_ids = row["project_ids"]
     ids = project_ids if isinstance(project_ids, list) else []
     clean_ids = [str(item) for item in ids]
+    title = str(row["title"])
+    country = str(row["country"])
+    city = str(row["city"])
+    amount = str(row["amount_usd"])
+    projects = projects_by_ids(clean_ids)
     return CatalogCommitment(
         commitment_id=str(row["commitment_id"]),
-        country=str(row["country"]),
-        city=str(row["city"]),
-        title=str(row["title"]),
-        amount_usd=str(row["amount_usd"]),
+        country=country,
+        city=city,
+        title=title,
+        amount_usd=amount,
         project_ids=clean_ids,
         created_at=str(row["created_at"]),
-        projects=projects_by_ids(clean_ids),
+        projects=projects,
+        impact=funding_impact(title, country, city, amount, clean_ids),
+        recommended_city=str(row["recommended_city"]) if row.get("recommended_city") else None,
+        human_choice=str(row.get("human_choice") or "unreviewed"),
+        decision_note=str(row.get("decision_note") or ""),
     )
 
 
@@ -488,26 +532,37 @@ def commit_catalog(item: CatalogCommitRequest) -> CatalogCommitment:
         raise _catalog_error(error) from error
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
+    recommended, human_choice, decision_note = _human_decision(item, city.city)
     commitment_id = f"commit-{uuid4().hex[:12]}"
     created_at = _now().isoformat()
+    project_ids = [project.project_id for project in projects]
+    amount = format(item.amount_usd, "f")
+    title = item.title.strip()
     store.save_catalog_commitment(
         commitment_id,
         city.country,
         city.city,
-        item.title.strip(),
-        format(item.amount_usd, "f"),
-        [project.project_id for project in projects],
+        title,
+        amount,
+        project_ids,
         created_at,
+        recommended,
+        human_choice,
+        decision_note,
     )
     return CatalogCommitment(
         commitment_id=commitment_id,
         country=city.country,
         city=city.city,
-        title=item.title.strip(),
-        amount_usd=format(item.amount_usd, "f"),
-        project_ids=[project.project_id for project in projects],
+        title=title,
+        amount_usd=amount,
+        project_ids=project_ids,
         created_at=created_at,
         projects=projects,
+        impact=funding_impact(title, city.country, city.city, amount, project_ids),
+        recommended_city=recommended,
+        human_choice=human_choice,
+        decision_note=decision_note,
     )
 
 

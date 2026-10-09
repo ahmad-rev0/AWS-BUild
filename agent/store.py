@@ -132,6 +132,19 @@ class SQLiteStore:
             connection.execute(
                 "INSERT OR IGNORE INTO schema_versions(version, applied_at) VALUES (1, datetime('now'))"
             )
+            self._ensure_column(connection, "catalog_commitments", "recommended_city", "TEXT")
+            self._ensure_column(
+                connection,
+                "catalog_commitments",
+                "human_choice",
+                "TEXT NOT NULL DEFAULT 'unreviewed'",
+            )
+            self._ensure_column(
+                connection,
+                "catalog_commitments",
+                "decision_note",
+                "TEXT NOT NULL DEFAULT ''",
+            )
 
     def create_proposal(self, proposal: Proposal, audit_event: AuditEvent) -> Proposal:
         """Insert a submitted proposal and its intake audit event atomically."""
@@ -421,14 +434,18 @@ class SQLiteStore:
         amount_usd: str,
         project_ids: list[str],
         created_at: str,
+        recommended_city: str | None = None,
+        human_choice: str = "unreviewed",
+        decision_note: str = "",
     ) -> None:
         """Store the latest decision to direct a proposal budget toward a World Bank city."""
         with self._transaction() as connection:
             connection.execute(
                 """
                 INSERT INTO catalog_commitments(
-                    commitment_id, country, city, title, amount_usd, project_ids, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    commitment_id, country, city, title, amount_usd, project_ids, created_at,
+                    recommended_city, human_choice, decision_note
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     commitment_id,
@@ -438,6 +455,9 @@ class SQLiteStore:
                     amount_usd,
                     json.dumps(project_ids),
                     created_at,
+                    recommended_city,
+                    human_choice,
+                    decision_note,
                 ),
             )
 
@@ -445,7 +465,8 @@ class SQLiteStore:
         """Return the newest directed-budget record, if one exists."""
         row = self._fetchone(
             """
-            SELECT commitment_id, country, city, title, amount_usd, project_ids, created_at
+            SELECT commitment_id, country, city, title, amount_usd, project_ids, created_at,
+                   recommended_city, human_choice, decision_note
             FROM catalog_commitments
             ORDER BY created_at DESC, commitment_id DESC
             LIMIT 1
@@ -490,6 +511,12 @@ class SQLiteStore:
         if row is None:
             return None
         return self._model("Approval").model_validate(dict(row))
+
+    @staticmethod
+    def _ensure_column(connection: sqlite3.Connection, table: str, column: str, definition: str) -> None:
+        existing = {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
+        if column not in existing:
+            connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     @contextmanager
     def _transaction(self) -> Iterator[sqlite3.Connection]:

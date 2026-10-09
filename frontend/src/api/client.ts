@@ -1,4 +1,13 @@
 import type {
+  CatalogCommitRequest,
+  CatalogCommitment,
+  CatalogCompareRequest,
+  CatalogCompareResponse,
+  CatalogRecommendation,
+  CatalogProject,
+  CatalogSummary,
+} from "../types/catalog";
+import type {
   Approval,
   ApprovalCreate,
   Assignment,
@@ -132,6 +141,15 @@ export const api = {
     request<Assignment>(`/proposals/${proposalId}/assignment`, "POST", payload),
   getAudit: (reviewId: string) => request<AuditEvent[]>(`/audit?review_id=${encodeURIComponent(reviewId)}`),
   getGaps: () => request<DistrictNeedRecord[]>("/gaps"),
+  getCatalog: () => request<CatalogSummary>("/catalog"),
+  getCatalogProjects: (country: string, city: string) =>
+    request<CatalogProject[]>(
+      `/catalog/projects?country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}&limit=8`,
+    ),
+  compareCatalog: (payload: CatalogCompareRequest) => request<CatalogCompareResponse>("/catalog/compare", "POST", payload),
+  recommendCatalog: (payload: CatalogCompareRequest) => request<CatalogRecommendation>("/catalog/recommend", "POST", payload),
+  commitCatalog: (payload: CatalogCommitRequest) => request<CatalogCommitment>("/catalog/commit", "POST", payload),
+  getCatalogCommitment: () => request<CatalogCommitment>("/catalog/commitment"),
   resetDemo: async () => {
     const response = await fetch(`${apiBase}/demo/reset`, { method: "POST" });
     if (!response.ok) throw await errorFrom(response);

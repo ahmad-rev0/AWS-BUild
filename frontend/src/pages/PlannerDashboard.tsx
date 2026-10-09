@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
+import { CatalogWorkspace } from "../components/CatalogWorkspace";
 import { DemoGuide } from "../components/DemoGuide";
 import { MapWorkspace } from "../components/MapWorkspace";
 import { ProposalForm } from "../components/ProposalForm";
@@ -14,6 +15,7 @@ const steps = ["Intake", "Review", "Verdicts", "Memo", "Commit"] as const;
 
 export function PlannerDashboard() {
   const workflow = useReviewWorkflow();
+  const [mode, setMode] = useState<"catalog" | "demo">("catalog");
   const [draft, setDraft] = useState<ProposalCreate>(CANONICAL_PROPOSAL);
   const busy = workflow.stage === "submitting" || workflow.stage === "streaming";
   const stepIndex = workflow.assignment ? 4 : workflow.report ? 3 : workflow.verdicts.length ? 2 : busy ? 1 : 0;
@@ -43,8 +45,16 @@ export function PlannerDashboard() {
             <span>SDG 11 coordination control room</span>
           </div>
         </div>
-        <p className="snapshot">Data snapshot: {workflow.gaps[0]?.snapshot_date ?? "TBD: needs source"}</p>
-        <div className="role" role="radiogroup" aria-label="Role">
+        <div className="role" role="tablist" aria-label="Workspace">
+          <button type="button" className={mode === "catalog" ? "on" : ""} onClick={() => setMode("catalog")}>World Bank</button>
+          <button type="button" className={mode === "demo" ? "on" : ""} onClick={() => setMode("demo")}>Scripted demo</button>
+        </div>
+        <p className="snapshot">
+          {mode === "catalog"
+            ? "World Bank Projects API · Pakistan and Bangladesh"
+            : `Data snapshot: ${workflow.gaps[0]?.snapshot_date ?? "TBD: needs source"}`}
+        </p>
+        {mode === "demo" && <div className="role" role="radiogroup" aria-label="Role">
           {(["planner", "approver"] as Role[]).map((item) => (
             <button
               key={item}
@@ -57,8 +67,8 @@ export function PlannerDashboard() {
               {item === "planner" ? "Planner" : "Approver"}
             </button>
           ))}
-        </div>
-        <button
+        </div>}
+        {mode === "demo" && <button
           type="button"
           className="memo-button"
           aria-expanded={workflow.drawerOpen}
@@ -69,8 +79,9 @@ export function PlannerDashboard() {
         >
           Review memo
           {workflow.report && <i />}
-        </button>
+        </button>}
       </header>
+      {mode === "catalog" ? <CatalogWorkspace /> : <>
       <ol className="progress">
         {steps.map((label, index) => (
           <li key={label} className={index < stepIndex ? "done" : index === stepIndex ? "current" : ""}>
@@ -174,6 +185,7 @@ export function PlannerDashboard() {
           }}
         />
       </div>
+      </>}
     </div>
   );
 }

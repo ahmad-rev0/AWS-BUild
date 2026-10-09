@@ -51,6 +51,7 @@ h2 { margin: 0; font-size: 16px; }
 .memo-button i { position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--sea); }
 
 .progress { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 0; padding: 6px 16px; list-style: none; background: #173246; color: #c9d7dc; }
+.progress.steps-3 { grid-template-columns: repeat(3, 1fr); }
 .progress li { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
 .progress span { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; border: 1px solid #6e8794; font-size: 11px; }
 .progress .done span, .progress .current span { background: var(--sea); border-color: var(--sea); color: white; }
@@ -72,7 +73,7 @@ h2 { margin: 0; font-size: 16px; }
 .proposal { padding: 12px; display: grid; gap: 8px; }
 .seeded-badge { padding: 7px 9px; border-radius: 9px; background: #fff1cc; color: #6b4e08; font-size: 12px; font-weight: 700; }
 label { display: grid; gap: 4px; font-size: 12px; font-weight: 650; }
-input, textarea { width: 100%; padding: 8px 10px; border: 1px solid #d9d0c2; border-radius: 9px; background: white; }
+input, textarea, select { width: 100%; padding: 8px 10px; border: 1px solid #d9d0c2; border-radius: 9px; background: white; }
 textarea { resize: vertical; min-height: 72px; }
 input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -123,6 +124,15 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
   background: #d7e6ea;
 }
 .leaflet-container { background: transparent; font: inherit; }
+.map-stage.geo { background: #d5e3ea; }
+.map-stage.geo .leaflet-container { background: #d5e3ea; }
+.city-picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.verdict a { color: var(--sea); font-weight: 700; }
+.impact, .advice { margin-top: 12px; display: grid; gap: 8px; }
+.impact h2, .advice h2 { font-size: 16px; margin: 0; }
+.advice { padding: 12px; background: #f4f1ea; border: 1px solid var(--line); }
+.area-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.advice textarea { width: 100%; min-height: 64px; }
 .district-label { background: transparent; border: 0; box-shadow: none; font-weight: 750; color: var(--ink); }
 .district-label.light { color: #f4f1ea; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
 .leaflet-tooltip-top.district-label::before { display: none; }
