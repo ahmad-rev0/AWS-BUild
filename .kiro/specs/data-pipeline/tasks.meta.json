@@ -1,0 +1,172 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add/confirm the Pydantic `Project`, `Candidate`, `RejectedRow`, and `IndexReport` models and validation rules without changing application routes.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437301
+      },
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521445030
+      },
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521530230
+      }
+    ],
+    "1.2 Add typed configuration and typed errors for provider selection, missing data, invalid filters, embedding failures, and `CredentialsExpired`.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437374
+      },
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521445146
+      },
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521530377
+      }
+    ],
+    "1.3 Add focused tests for CSV parsing, provenance boundaries, date normalization, duplicate IDs, and exact AWS expiry messaging.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437417
+      }
+    ],
+    "2.1 Implement local `sentence-transformers/all-MiniLM-L6-v2` provider with no implicit network download in offline mode.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437497
+      }
+    ],
+    "2.2 Implement Bedrock Titan Text Embeddings V2 provider using refreshed dotenv/environment configuration, bounded 20-second calls, and credential exception mapping.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437541
+      }
+    ],
+    "2.3 Add provider tests with fake local/model and boto3 clients, including partial failure behavior.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437579
+      }
+    ],
+    "3.1 Load the required primary CSV and optional separate seeded CSV, validate rows independently, and report rejected rows.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437609
+      }
+    ],
+    "3.2 Canonicalize `name + description + themes`, compute deterministic SHA-256 content hashes, and reject conflicting duplicate IDs.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437643
+      }
+    ],
+    "3.3 Create/reuse persistent Chroma `projects` at `data/index/` and upsert required metadata and documents.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437678
+      }
+    ],
+    "3.4 Implement `--incremental`, including skip-on-unchanged, re-upsert-on-change, stale-ID removal, and atomic manifest commit.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437709
+      }
+    ],
+    "3.5 Add command-line summary output and actionable missing-data/provider errors.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437743
+      }
+    ],
+    "4.1 Implement `search(text, k=8, filters)` with supported city, district, and inclusive date-window filters.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437779
+      }
+    ],
+    "4.2 Normalize Chroma distances to `[0,1]`, deduplicate IDs, sort descending with deterministic ties, and enforce the `k` bound.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437811
+      }
+    ],
+    "4.3 Add required Hypothesis properties for ordering, uniqueness, score bounds, filter compliance, and local/offline behavior.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437844
+      }
+    ],
+    "4.4 Add a temporary persistent-Chroma integration smoke test that reopens the index and verifies metadata filtering.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437879
+      }
+    ],
+    "5.1 Check Nova Pro and Titan embeddings independently using refreshed dotenv credentials.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437909
+      }
+    ],
+    "5.2 Report callable status, model IDs, and known token lifetime without secrets; return non-zero on unavailable checks.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437942
+      }
+    ],
+    "5.3 Add mocked success, expiry, and partial-service diagnostic tests.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521437976
+      }
+    ],
+    "6.1 Confirm `data/index/` is git-ignored and generated artifacts are rebuildable from CSV inputs.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521438009
+      }
+    ],
+    "6.2 Confirm `DEMO_MODE=cached` does not call Bedrock for the scripted review path.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521438043
+      }
+    ],
+    "6.3 Run the narrow pipeline unit/property tests and local smoke test with cached MiniLM; document any missing optional model/cache dependency.": [
+      {
+        "executionId": "15fd26aa-ce4e-47b5-900c-679badacef77",
+        "chatSessionId": "sess_d30e41cc-e97b-455d-b3e7-8fc6aaf350f9",
+        "timestamp": 1791521438076
+      }
+    ]
+  }
+}
