@@ -1,2 +1,5 @@
-pydantic==2.10.6
+pydantic==2.14.0
 python-dotenv==1.0.1
+ruff==0.11.0
+pytest==8.3.5
+hypothesis==6.127.3
