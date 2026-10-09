@@ -2,6 +2,7 @@
 
 import csv
 import importlib.util
+import json
 import math
 from pathlib import Path
 
@@ -270,59 +271,186 @@ def test_gap_classification_matches_its_inclusive_definition(
     )
 
 
-def test_build_need_scores_uses_exact_canonical_district_ids_and_preserves_provenance(
-    tmp_path: Path,
-) -> None:
+def _write_builder_inputs(tmp_path: Path) -> tuple[Path, Path, Path, Path, Path]:
     indicators_path = tmp_path / "district_indicators.csv"
     indicators_path.write_text(
         "district_id,district_name,population,population_density,informal_settlement_share,flood_exposure,transport_access_gap,indicator_quality,snapshot_date,source,source_url\n"
+        "district-c,District C,100,0.8,0.8,0.8,0.8,illustrative,2025-01-01,seeded,local://indicators\n"
         "district-a,District A,100,0,0,0,0,illustrative,2025-01-01,seeded,local://indicators\n"
-        "district-b,District B,100,1,1,1,1,estimated,TBD: needs source,seeded,local://indicators\n"
-        "district-c,District C,100,0.8,0.8,0.8,0.8,illustrative,2025-01-01,seeded,local://indicators\n",
+        "district-b,District B,100,1,1,1,1,estimated,,seeded,local://indicators\n",
         encoding="utf-8",
     )
     projects_path = tmp_path / "projects.csv"
     projects_path.write_text(
         "project_id,district,amount_usd\n"
-        "exact,district-a,100\n"
-        "not-canonical,District A,900\n"
-        "unmatched,district-z,500\n",
+        "exact-first,district-a,100\n"
+        "exact-second,district-a,25\n"
+        "display-name,District A,900\n"
+        "unmatched-invalid,district-z,NaN\n",
         encoding="utf-8",
     )
     weights_path = tmp_path / "need_weights.json"
     weights_path.write_text(
-        '{"population_density": 0.25, "informal_settlement_share": 0.35, '
-        '"flood_exposure": 0.25, "transport_access_gap": 0.15}',
+        json.dumps(
+            {
+                "population_density": 0.25,
+                "informal_settlement_share": 0.35,
+                "flood_exposure": 0.25,
+                "transport_access_gap": 0.15,
+            }
+        ),
         encoding="utf-8",
     )
     districts_geojson_path = tmp_path / "districts.geojson"
     districts_geojson_path.write_text(
-        '{"type":"FeatureCollection","features":['
-        '{"type":"Feature","properties":{"district_id":"district-a"}},'
-        '{"type":"Feature","properties":{"district_id":"district-b"}},'
-        '{"type":"Feature","properties":{"district_id":"district-c"}}]}',
+        json.dumps(
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    {"type": "Feature", "properties": {"district_id": district_id}}
+                    for district_id in ("district-c", "district-a", "district-b")
+                ],
+            }
+        ),
         encoding="utf-8",
     )
-    output_path = tmp_path / "need_scores.csv"
-
-    build_need_scores(
+    return (
         districts_geojson_path,
         indicators_path,
         projects_path,
         weights_path,
-        output_path,
+        tmp_path / "need_scores.csv",
     )
 
+
+def test_build_need_scores_writes_exact_assignments_and_retained_provenance(
+    tmp_path: Path,
+) -> None:
+    paths = _write_builder_inputs(tmp_path)
+
+    returned_rows = build_need_scores(*paths)
+    output_path = paths[-1]
+    output_bytes = output_path.read_bytes()
     with output_path.open(newline="", encoding="utf-8") as output_file:
-        rows = {row["district_id"]: row for row in csv.DictReader(output_file)}
-    assert list(rows) == ["district-a", "district-b", "district-c"]
-    assert rows["district-a"]["funded_commitments_usd"] == "100.0"
-    assert rows["district-a"]["commitments_per_capita"] == "1.0"
-    assert rows["district-c"]["funded_commitments_usd"] == "0.0"
-    assert rows["district-c"]["need_score"] == "0.8"
-    assert rows["district-c"]["funding_gap"] == "true"
-    assert rows["district-a"]["funding_gap"] == "false"
-    assert rows["district-c"]["indicator_quality"] == "illustrative"
-    assert rows["district-c"]["snapshot_date"] == "2025-01-01"
-    assert rows["district-c"]["source"] == "seeded"
-    assert rows["district-c"]["source_url"] == "local://indicators"
+        reader = csv.DictReader(output_file)
+        rows = list(reader)
+        assert reader.fieldnames == list(_builder.OUTPUT_FIELDS)
+
+    assert returned_rows == rows
+    assert [row["district_id"] for row in rows] == [
+        "district-a",
+        "district-b",
+        "district-c",
+    ]
+    rows_by_id = {row["district_id"]: row for row in rows}
+    assert rows_by_id["district-a"]["funded_commitments_usd"] == "125.0"
+    assert rows_by_id["district-a"]["commitments_per_capita"] == "1.25"
+    assert rows_by_id["district-c"]["funded_commitments_usd"] == "0.0"
+    assert rows_by_id["district-c"]["need_score"] == "0.8"
+    assert rows_by_id["district-c"]["funding_gap"] == "true"
+    assert rows_by_id["district-a"]["funding_gap"] == "false"
+    assert rows_by_id["district-c"]["indicator_quality"] == "illustrative"
+    assert rows_by_id["district-c"]["snapshot_date"] == "2025-01-01"
+    assert rows_by_id["district-b"]["snapshot_date"] == "TBD: needs source"
+    assert rows_by_id["district-c"]["source"] == "seeded"
+    assert rows_by_id["district-c"]["source_url"] == "local://indicators"
+
+    assert build_need_scores(*paths) == returned_rows
+    assert output_path.read_bytes() == output_bytes
+
+
+@pytest.mark.parametrize(
+    ("geojson", "message"),
+    [
+        ("{not json", "not valid JSON"),
+        (json.dumps([]), "must be a FeatureCollection"),
+        (json.dumps({"type": "FeatureCollection", "features": [{}]}), "invalid"),
+        (
+            json.dumps(
+                {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"district_id": "district-a"},
+                        },
+                        {
+                            "type": "Feature",
+                            "properties": {"district_id": "district-a"},
+                        },
+                    ],
+                }
+            ),
+            "unique canonical district IDs",
+        ),
+        (
+            json.dumps(
+                {
+                    "type": "FeatureCollection",
+                    "features": [{"type": "Feature", "properties": {}}],
+                }
+            ),
+            "invalid canonical district_id",
+        ),
+    ],
+)
+def test_build_need_scores_preserves_committed_output_on_malformed_geojson(
+    tmp_path: Path, geojson: str, message: str
+) -> None:
+    paths = _write_builder_inputs(tmp_path)
+    districts_geojson_path, *_, output_path = paths
+    output_path.write_bytes(b"previous committed output\n")
+    districts_geojson_path.write_text(geojson, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        build_need_scores(*paths)
+
+    assert output_path.read_bytes() == b"previous committed output\n"
+
+
+def test_build_need_scores_reports_id_mismatch_without_replacing_output(
+    tmp_path: Path,
+) -> None:
+    paths = _write_builder_inputs(tmp_path)
+    districts_geojson_path, *_, output_path = paths
+    output_path.write_bytes(b"previous committed output\n")
+    districts_geojson_path.write_text(
+        json.dumps(
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    {"type": "Feature", "properties": {"district_id": "district-a"}},
+                    {"type": "Feature", "properties": {"district_id": "district-b"}},
+                    {"type": "Feature", "properties": {"district_id": "district-z"}},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"missing from GeoJSON: \['district-c'\].*extra in GeoJSON: \['district-z'\]",
+    ):
+        build_need_scores(*paths)
+
+    assert output_path.read_bytes() == b"previous committed output\n"
+
+
+def test_build_need_scores_preserves_committed_output_on_staging_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    paths = _write_builder_inputs(tmp_path)
+    output_path = paths[-1]
+    output_path.write_bytes(b"previous committed output\n")
+
+    def fail_fsync(_: int) -> None:
+        raise OSError("simulated disk failure")
+
+    monkeypatch.setattr(_builder.os, "fsync", fail_fsync)
+
+    with pytest.raises(ValueError, match="Unable to publish need scores"):
+        build_need_scores(*paths)
+
+    assert output_path.read_bytes() == b"previous committed output\n"
+    assert not list(tmp_path.glob(f".{output_path.name}.*.tmp"))

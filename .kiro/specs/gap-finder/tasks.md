@@ -29,7 +29,7 @@ Implement the smallest compatible local gap-finder path: extend the existing bui
   - [~] 2.2 Implement complete record construction, shared-model validation, ascending district-ID serialization, and same-directory staged-file replacement in `scripts/build_need_scores.py`.
     - Publish only a complete, valid `need_scores.csv`; retain round-trip-safe score precision and clean up failed staging files.
     - _Requirements: 2.4, 3.3, 4.1–4.2, 4.7–4.8_
-  - [ ]* 2.3 Add deterministic builder integration cases in `agent/tests/test_build_need_scores.py` for malformed GeoJSON, ID mismatch, matched/unmatched project amounts, provenance/snapshot retention, stable ordering, reproducible rebuilds, and output preservation on validation or staging failure.
+  - [x]* 2.3 Add deterministic builder integration cases in `agent/tests/test_build_need_scores.py` for malformed GeoJSON, ID mismatch, matched/unmatched project amounts, provenance/snapshot retention, stable ordering, reproducible rebuilds, and output preservation on validation or staging failure.
     - _Requirements: 1.1–1.7, 3.1–3.3, 4.1–4.8_
 
 - [ ] 3. Add one read-only Pydantic-validated gap data boundary
