@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Verify Spec Task Requirements",
+      "trigger": "PostTaskExec",
+      "description": "Verifies completed spec tasks against referenced requirements and runs only related tests.",
+      "action": {
+        "type": "agent",
+        "prompt": "A spec task just finished. Look up the requirement IDs it references in the spec's requirements.md, list each acceptance criterion as met / not met with evidence (test name or file:line), and run only the tests related to this task. If anything is not met, say so and stop; do not start the next task."
+      }
+    }
+  ]
+}
