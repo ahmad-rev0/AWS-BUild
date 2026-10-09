@@ -3,15 +3,15 @@ inclusion: manual
 ---
 # /demo-readiness: pre-pitch verification checklist
 
-Run each check, then report a table: check | pass/fail | fix applied.
+The 90-minute cut line is the deterministic seeded/cached path: fixed proposal → review → one OVERLAPPING and one COMPLEMENTARY verdict → memo → approver action → gap redirect/map state. Run blocking checks first and report `check | pass/fail | fix applied`.
 
-1. `python scripts/check_aws.py`: Bedrock reachable? If not, confirm `DEMO_MODE=cached` works.
-2. Start the API and frontend if they aren't running. Check the ports first.
-3. Run the scripted demo scenario end to end via `python scripts/demo_smoke.py`. It must reproduce: one OVERLAPPING (recommend co-finance), one COMPLEMENTARY, the memo, an approval and the gap redirect.
-4. Run `python -m agent.eval` (full golden set). Report accuracy and per-label results.
-5. Run `pytest -q` and `npm --prefix frontend run test -- --run`.
-6. Verify `data/demo_cache/` has a cached response for every scripted step.
-7. Check the UI at 1366×768 (use the Playwright MCP to take screenshots into `docs/screenshots/`).
-8. Confirm the seeded-data badges and data snapshot date are visible.
-9. `git status` is clean, and the last commit is tagged `demo-ready`.
+## Blocking demo checks
+1. Check ports before starting services; never start a second instance.
+2. Run `python scripts/demo_smoke.py` in `DEMO_MODE=cached`; it must reproduce the canonical scenario, including both labels, memo, approval/rejection state, and redirect map state without Bedrock.
+3. Confirm every scripted response is locally available under the canonical cache key and that the minimal pipeline/API/frontend shared-ID schema smoke test passes.
+4. Confirm seeded badges and an actual snapshot date are visible; use `TBD: needs source` when the date is unavailable.
+
+## Secondary evidence checks
+Bedrock reachability, full indexing, full golden evaluation, complete pytest/Vitest runs, 1366×768 screenshots, and pitch-evidence collection are secondary if the blocking path works. Run them only when time permits. Do not require clean git status or a `demo-ready` tag before demonstration.
+
 Don't change product behaviour in this pass. Fix only what blocks the demo.

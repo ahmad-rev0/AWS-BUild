@@ -42,5 +42,6 @@ atlas11/
 - One agent tool per file in `agent/tools/`, each with a docstring. Strands uses the docstring as the tool description, so write it for the model.
 - System prompts live in `agent/prompts/*.md`, never inline in Python. A hook regression-tests them on every save.
 - Pipeline outputs (`data/processed`, `data/index`) are generated and must be rebuildable with `python scripts/build_index.py`.
+- Pipeline, API, and frontend use the same stable project/proposal/review/district IDs and shared schemas; the minimal end-to-end smoke test is the integration gate.
 - Imports are absolute from the package root (`from agent.schemas import Verdict`).
 - Names: snake_case in Python, PascalCase React components, kebab-case for spec folder names.

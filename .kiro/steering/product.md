@@ -30,8 +30,8 @@ Atlas11 shows city planners and development-finance officers **where urban devel
 1. **Proposal intake:** submit a new urban project (title, description, city or district, sector, budget, dates).
 2. **Clash review (agentic):** retrieve similar funded projects with vector search, filter by geography, time and sector, then have the agent classify each candidate as `DUPLICATE | OVERLAPPING | COMPLEMENTARY | UNRELATED` with reasons and a confidence score.
 3. **Coordination memo:** the agent drafts a short memo (recommend merge, co-finance, proceed or redirect).
-4. **Human approval:** an approver accepts or rejects the recommendation. Nothing changes status without approval.
-5. **Gap map:** a district map of funded projects against a need score, highlighting high-need districts with no funding.
+4. **Human approval:** review completion marks the proposal `REVIEWED`; only an approver can approve or reject, and rejection requires a reason. Approval is coordination sign-off, not money movement or funding allocation.
+5. **Gap map:** a district map of funded projects against a need score, highlighting high-need districts with no funding. An approved `REDIRECT` recommendation changes the displayed coordination target/map focus only; it does not claim that the district received funds.
 6. **Audit trail:** every agent decision, tool call and human approval is logged and viewable.
 
 ## Non-goals (for the hackathon)
@@ -42,7 +42,7 @@ Atlas11 shows city planners and development-finance officers **where urban devel
 ## Demo story (5 minutes)
 1. Problem hook (45s): one real city with several funders and one high-need district left out.
 2. Gap in SDG measurement (30s): 11.c has no indicator, and Atlas11 provides one.
-3. Live demo (2.5 min): submit proposal → agent finds an OVERLAPPING project (recommend co-finance) and a COMPLEMENTARY one that only *sounds* similar → memo → approve → gap map shows the redirect target.
+3. Live demo (2.5 min): submit the fixed seeded proposal → cached review finds one OVERLAPPING project (recommend co-finance) and one COMPLEMENTARY project that only *sounds* similar → memo → approver action → gap map shows the redirect target without claiming new funding.
 4. How Kiro built it (45s): steering, specs with EARS and property tests, hooks that regression-test the agent, MCP and Powers, skills, custom agents.
 5. Impact and scale (30s): works for any city with open project data (World Bank API, IATI).
 

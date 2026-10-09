@@ -12,4 +12,4 @@ Judges reward honesty and punish numbers that look made up. Follow these rules e
 3. **Illustrative indicators are labelled.** If a district need indicator is estimated or illustrative, `need_scores.csv` has `indicator_quality = measured|estimated|illustrative`, and the map legend says so.
 4. **Never invent statistics** for the UI, README or pitch copy. Every impact number must come from (a) computation over our data, shown with the query, or (b) a cited public source with URL. Otherwise write "TBD: needs source".
 5. **Never invent real-world claims** about specific funders or projects (e.g. "Bank X duplicated Bank Y in 2023") unless a source URL is in the data.
-6. Charts and the dashboard state the data snapshot date ("World Bank API, fetched 2026-10-XX").
+6. Charts and the dashboard state the data snapshot date. Use the actual source/fetch date; if it is unavailable, write `TBD: needs source` rather than a placeholder or fabricated date.

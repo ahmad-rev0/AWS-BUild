@@ -12,6 +12,11 @@ There are five specs, each using a **different Kiro spec workflow**, so every sp
 
 **Before the first spec:** check that the steering files are loaded (type `#steering` in chat) and that the Strands Power and MCP servers show *Connected*.
 
+## 90-minute MVP contract (applies to every spec)
+The blocking path is one deterministic, seeded/cached scenario: fixed proposal ID/scenario key → review → exactly one expected `OVERLAPPING` and one expected `COMPLEMENTARY` verdict → memo → approver action → gap redirect/map state. Live Bedrock, full indexing, exhaustive evaluation, and screenshots are secondary if not already working. The pipeline, API, and frontend must share stable IDs and schemas; the minimal end-to-end smoke test is the integration gate. Every seeded result is labelled `source=seeded`; use an actual snapshot date or `TBD: needs source`, never a fabricated date.
+
+Canonical scenario contract: `scenario_key=demo-city-transit-01` (or the implementation's fixed equivalent, documented once), proposal ID `demo-proposal-01`, city ID/name, district ID/name, sector, start date, end date, and source are required. The report must contain labels `OVERLAPPING` and `COMPLEMENTARY`, recommendation `CO_FINANCE`, and a `redirect_district_id`; approval and gap responses must work locally in `DEMO_MODE=cached` without Bedrock. City/district matching uses canonical IDs; missing districts do not match. Apply exactly 12 months of slack to both date endpoints; missing dates are conservative and cannot establish overlap.
+
 ---
 
 ## Spec A: `data-pipeline` (Feature → Design-First)
@@ -62,6 +67,8 @@ Build the Atlas11 clash review agent following #steering agent-guardrails.md and
 - FastAPI app (agent/app.py): POST /proposals, POST /proposals/{id}/review (returns review_id),
   GET /reviews/{id}/events (Server-Sent Events streaming agent progress + tool calls),
   GET /reviews/{id} (final ClashReport), POST /approvals, GET /audit.
+  Review completion moves SUBMITTED to REVIEWED; only an approver may approve/reject, rejection requires a reason, and approval never moves money.
+  SSE events use `{type, name?, ms?, payload?}` and are ordered status → tool_call(s) → verdict(s) → done, or error instead of done. Audit rows contain event type, relevant IDs, actor/role, UTC timestamp, and payload summary.
 - Tools in agent/tools/: search_similar_projects, get_project, check_overlap (deterministic geo/time/sector
   facts, no LLM), district_need, draft_memo.
 - Post-processing validator enforcing the taxonomy rules (different city => never DUPLICATE/OVERLAPPING;
@@ -73,12 +80,14 @@ Build the Atlas11 clash review agent following #steering agent-guardrails.md and
 ```
 
 ### Requirements review: required EARS statements
-- WHEN a planner submits a review request, THE SYSTEM SHALL retrieve at most 8 candidates and send at most 5 to the model after deterministic filtering.
+- WHEN a planner submits a review request, THE SYSTEM SHALL filter by city, optional district, sector, and implementation date window, retrieve at most 8 candidates, and send at most 5 to the model after deterministic filtering.
 - WHEN a candidate's city differs from the proposal's city, THE SYSTEM SHALL NOT label it DUPLICATE or OVERLAPPING.
 - WHEN the implementation periods don't overlap within 12 months, THE SYSTEM SHALL NOT label the pair DUPLICATE or OVERLAPPING.
-- IF a DUPLICATE verdict cites fewer than two matching attributes, THEN THE SYSTEM SHALL downgrade it to OVERLAPPING and record the downgrade in the audit log.
-- THE SYSTEM SHALL NOT change a proposal's status except through an approval by a user with the approver role.
+- `DUPLICATE` requires at least two matching attributes; concrete outputs and the taxonomy decision rules still govern the final label. If a model emits `DUPLICATE` with fewer than two, downgrade it to `OVERLAPPING` and record the downgrade in the audit log.
+- THE SYSTEM SHALL NOT change a proposal's status except through the defined state machine: review completion moves `SUBMITTED` to `REVIEWED`, then only an approver may move it to `APPROVED` or `REJECTED`; rejection requires a reason and no transition moves money.
 - WHEN the model output fails schema validation, THE SYSTEM SHALL retry once with the validation error and, if it fails again, return HTTP 502 with a readable message.
+- WHILE `DEMO_MODE=cached`, THE SYSTEM SHALL resolve the canonical scenario by its fixed key/proposal ID without Bedrock, and approval/gap responses SHALL be deterministic or locally backed.
+- THE SYSTEM SHALL use the shared IDs/schemas across pipeline, API, and frontend; the minimal end-to-end smoke test SHALL be the integration gate.
 - IF Bedrock rejects the credentials as expired, THEN THE SYSTEM SHALL return HTTP 503 with the message "AWS credentials expired. Refresh agent/.env from Workshop Studio."
 - WHILE `DEMO_MODE=cached`, THE SYSTEM SHALL serve cached reports for scripted proposals without calling Bedrock.
 - WHEN a review runs, THE SYSTEM SHALL emit a progress event for every tool call, with name and duration.
@@ -98,8 +107,8 @@ When running the PBT tasks, **make them required, not optional.** If a property 
 ### Design review checklist
 - [ ] Tools return facts; the model only reasons (no date maths in the prompt)
 - [ ] The system prompt is in `agent/prompts/clash_system.md` (watched by the eval hook)
-- [ ] SSE events carry `{type: tool_call|status|verdict|done, name, ms}`
-- [ ] A cached-mode code path exists at the API layer, not inside the agent
+- [ ] SSE events carry `{type, name?, ms?, payload?}`; `status` precedes `tool_call` events, then `verdict`, then `done` (or `error` instead of `done`)
+- [ ] A cached-mode code path exists at the API layer, not inside the agent, keyed by the canonical scenario key/proposal ID and covering review, approval, and gap responses
 
 ### Tasks review
 - Run tasks **one at a time** with ⚡ *Start task* (the lab recommends this), in Supervised mode for the first three tasks, then Autopilot once the tests pass.

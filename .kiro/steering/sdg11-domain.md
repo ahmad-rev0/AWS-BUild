@@ -15,10 +15,10 @@ The agent classifies every (proposal, existing project) pair as exactly one of t
 | `UNRELATED` | Retrieved by similarity but no meaningful relationship. | Proceed |
 
 ### Decision rules (the agent must apply these in order)
-1. **Geography first.** A different city means it cannot be `DUPLICATE` or `OVERLAPPING`. The same city but a different district is at most `OVERLAPPING`, and only if the beneficiaries are shared.
-2. **Time second.** Implementation periods must overlap (allowing 12 months of slack) for `DUPLICATE` or `OVERLAPPING`.
+1. **Geography first.** Match city and district by canonical IDs, not display-name spelling. A different city means it cannot be `DUPLICATE` or `OVERLAPPING`; an absent or unknown district is not a match. The same city but a different district is at most `OVERLAPPING`, and only if beneficiaries are shared.
+2. **Time second.** Use inclusive implementation dates. A pair qualifies as overlapping only when its periods intersect after applying exactly 12 months of implementation slack to both ends. Missing either start or end date is conservative: do not infer overlap and do not use `DUPLICATE` or `OVERLAPPING` on time evidence alone.
 3. **Outputs third.** Compare concrete outputs (km of pipe, number of housing units, BRT corridor name), not adjectives.
-4. **High text similarity alone never justifies `DUPLICATE`.** The agent must cite at least two concrete matching attributes (location + output, or location + beneficiaries).
+4. **Matching minimum.** Two matching attributes are necessary for `DUPLICATE`; concrete output and taxonomy rules still govern the final label. High text similarity alone never justifies it.
 5. When evidence is insufficient, choose the *less severe* label and lower the confidence.
 
 ## Need score (gap map)

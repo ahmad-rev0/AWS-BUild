@@ -21,8 +21,11 @@ inclusion: always
 - Workshop credentials **expire after 1 hour**. Code must surface a clear error ("AWS credentials expired, refresh agent/.env") rather than a stack trace.
 - Never write real keys into any tracked file. `.env` is git-ignored; `.env.example` holds placeholders.
 
+## 90-minute MVP cut line
+The must-demo path is deterministic and seeded/cached: fixed proposal → review → one `OVERLAPPING` and one `COMPLEMENTARY` verdict → memo → approver action → gap redirect/map state. Live Bedrock, full indexing, exhaustive evaluation, and screenshots are secondary when they are not already working. The pipeline, API, and frontend share the same IDs and Pydantic/TypeScript payload schema; the minimal end-to-end smoke test is the integration gate.
+
 ## Resilience requirements (the demo must not die)
-- **Demo cache:** every agent response for the scripted demo scenario is cached in `data/demo_cache/`. With `DEMO_MODE=cached` the API serves cached responses when Bedrock is unreachable.
+- **Demo cache:** every agent response for the scripted demo scenario is cached in `data/demo_cache/`. With `DEMO_MODE=cached`, the API serves the scripted report by its fixed scenario key/proposal ID without Bedrock; approval and gap responses are deterministic or locally backed.
 - Time out all Bedrock calls (20s) and degrade gracefully.
 - The app must run fully offline in cached mode, except for map tiles.
 

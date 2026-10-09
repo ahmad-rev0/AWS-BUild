@@ -5,9 +5,14 @@ fileMatchPattern: ["agent/**"]
 # Agent design guardrails (Strands + Bedrock Nova Pro)
 
 ## Human in the loop: non-negotiable
-- The agent **recommends**. It never changes a proposal's status, allocates funds or "approves" anything.
-- Status changes happen only through `POST /approvals` with `role=approver`.
+- Review completion moves `SUBMITTED` to `REVIEWED`; the agent still never approves, changes funding, or allocates funds.
+- Only `role=approver` may transition `REVIEWED` to `APPROVED` or `REJECTED`; rejection requires a reason. Approval is coordination sign-off only and does not fund a district or move money.
 - Every recommendation shows the reasoning, the cited evidence (project IDs + matching attributes) and a confidence score.
+
+## Deterministic demo and transport contract
+- With `DEMO_MODE=cached`, the fixed scripted scenario key/proposal ID serves its cached report without Bedrock. Approval and gap responses are deterministic/local; cache records are labelled `source=seeded`.
+- Review SSE events use `{type, name?, ms?, payload?}`. `status` events describe progress, `tool_call` events name the tool and duration, `verdict` events carry one validated verdict, `done` carries the final review ID/report reference, and `error` carries a readable error. Order is status → tool_call(s) → verdict(s) → done, or error instead of done.
+- Audit rows minimally contain `event_type`, proposal/review/project/approval IDs when applicable, actor and role when applicable, UTC timestamp, and a short payload summary.
 
 ## Agent shape
 - One Strands `Agent` with a system prompt loaded from `agent/prompts/clash_system.md`.
@@ -31,7 +36,7 @@ Memo { recommendation: MERGE|CO_FINANCE|PROCEED|REDIRECT, summary: str, redirect
 - A `DUPLICATE` with fewer than 2 `matching_attributes` is invalid. Downgrade it to `OVERLAPPING` and log it.
 
 ## Cost and latency
-- Retrieve at most `k=8` candidates and send at most 5 to the model after deterministic filtering.
+- Retrieve at most `k=8` candidates after filtering by city, optional district, sector and implementation date window; send at most 5 to the model after deterministic filtering.
 - Keep the system prompt under about 1,200 tokens. Put the taxonomy in the prompt, not long examples.
 - Log tool calls and timings to the audit table. The UI shows them as a "How the agent decided" panel, which is a strong demo moment.
 
