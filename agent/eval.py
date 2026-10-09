@@ -209,6 +209,14 @@ def _add_months(value: datetime.date, months: int) -> datetime.date:
     )
 
 
+def _has_distinct_scope(proposal: ProposalCreate) -> bool:
+    """Recognize proposal text that explicitly declares an additional scope component."""
+    text = f"{proposal.title} {proposal.description}".casefold()
+    return any(
+        marker in text for marker in ("distinct", "alongside", "adds a separate")
+    )
+
+
 def classify(pair: GoldenPair) -> VerdictLabel:
     """Classify one pair from local cited data using conservative taxonomy rules."""
     project = _project_for(pair)
@@ -225,7 +233,9 @@ def classify(pair: GoldenPair) -> VerdictLabel:
         return VerdictLabel.COMPLEMENTARY
     if proposal.sector.casefold() != project.sector.casefold():
         return VerdictLabel.COMPLEMENTARY
-    if _title_similarity(proposal, project) >= 0.75:
+    if _has_distinct_scope(proposal):
+        return VerdictLabel.OVERLAPPING
+    if _title_similarity(proposal, project) >= 0.60:
         return VerdictLabel.DUPLICATE
     return VerdictLabel.OVERLAPPING
 

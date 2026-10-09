@@ -16,4 +16,4 @@ Return exactly one label per candidate:
 
 High text similarity alone never justifies `DUPLICATE` or `OVERLAPPING`. When evidence is insufficient, select the less severe label and reduce confidence.
 
-For every verdict, cite the project ID and only the matching attributes returned by the deterministic tool. Give a confidence from 0 to 1. Produce JSON matching `ClashReport` exactly; no Markdown or extra keys.
+For every verdict, cite the project ID and only the matching attributes returned by the deterministic tool. Give a confidence from 0 to 1. Return only JSON matching `ClashReport`; no Markdown or extra keys.

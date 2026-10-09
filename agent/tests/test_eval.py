@@ -68,7 +68,12 @@ def test_quick_uses_first_six_and_full_uses_all_pairs(tmp_path: Path) -> None:
     pairs = [
         _pair("gp-001", "DUPLICATE"),
         _pair(
-            "gp-002", "OVERLAPPING", proposal={"title": "Karachi mobility extension"}
+            "gp-002",
+            "OVERLAPPING",
+            proposal={
+                "title": "Urban transit extension",
+                "description": "Extend urban transit service.",
+            },
         ),
         _pair(
             "gp-003",
@@ -80,7 +85,12 @@ def test_quick_uses_first_six_and_full_uses_all_pairs(tmp_path: Path) -> None:
         ),
         _pair("gp-005", "DUPLICATE"),
         _pair(
-            "gp-006", "OVERLAPPING", proposal={"title": "Karachi mobility extension"}
+            "gp-006",
+            "OVERLAPPING",
+            proposal={
+                "title": "Urban transit extension",
+                "description": "Extend urban transit service.",
+            },
         ),
         _pair("gp-007", "UNRELATED", proposal={"city_id": "Lahore"}),
     ]
