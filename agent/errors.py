@@ -29,6 +29,13 @@ class SearchInputError(PipelineError):
     """Raised before querying Chroma when search text, limits, or filters are invalid."""
 
 
+class ProjectNotFoundError(PipelineError):
+    """Raised when a canonical project is absent from the local project source."""
+
+    def __init__(self, project_id: str) -> None:
+        super().__init__(f"Project not found: {project_id}")
+
+
 class EmbeddingProviderError(PipelineError):
     """Raised when the configured embedding provider cannot create embeddings."""
 

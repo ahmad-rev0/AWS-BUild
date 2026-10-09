@@ -6,17 +6,17 @@ Implement the clash review agent in dependency order: shared contracts and durab
 
 ## Tasks
 
-- [ ] 1. Establish shared clash-review contracts and storage
+- [x] 1. Establish shared clash-review contracts and storage
   - [x] 1.1 Extend `agent/schemas.py` with typed Pydantic contracts for proposal intake/persistence, statuses, role, review creation, all four verdict labels, memo recommendations, `ClashReport`, approvals, SSE events, overlap facts, and audit events.
   - [x] 1.2 Add model validators for ordered proposal dates, finite confidence in `[0,1]`, non-empty rejection reasons, redirect-only memo district, and stable canonical IDs/source labels.
   - [x] 1.3 Implement `agent/store.py` SQLite schema and typed repository operations for proposals, reviews, approvals, and append-only audit events, including transactional completion/approval writes.
-  - [~] 1.4 Add focused contract/store tests for validation, proposal insertion, atomic review completion, approval persistence, and sanitized audit rows.
+  - [x] 1.4 Add focused contract/store tests for validation, proposal insertion, atomic review completion, approval persistence, and sanitized audit rows.
 
 - [ ] 2. Implement deterministic review tools and taxonomy validator
-  - [~] 2.1 Add `agent/tools/search_similar_projects.py` with a model-facing docstring, Pydantic input/output, `k <= 8` enforcement, and shared retrieval delegation returning IDs/scores only.
-  - [~] 2.2 Add `agent/tools/get_project.py` with a model-facing docstring, Pydantic input/output, canonical lookup, provenance preservation, and typed not-found failure.
-  - [~] 2.3 Add `agent/tools/check_overlap.py` with a model-facing docstring and deterministic canonical city/district, sector/beneficiary, concrete-output, and inclusive 12-month date-slack facts.
-  - [~] 2.4 Add `agent/tools/district_need.py` and `agent/tools/draft_memo.py`, each with a model-facing docstring and Pydantic contracts; keep redirects explicitly non-financial.
+  - [x] 2.1 Add `agent/tools/search_similar_projects.py` with a model-facing docstring, Pydantic input/output, `k <= 8` enforcement, and shared retrieval delegation returning IDs/scores only.
+  - [x] 2.2 Add `agent/tools/get_project.py` with a model-facing docstring, Pydantic input/output, canonical lookup, provenance preservation, and typed not-found failure.
+  - [x] 2.3 Add `agent/tools/check_overlap.py` with a model-facing docstring and deterministic canonical city/district, sector/beneficiary, concrete-output, and inclusive 12-month date-slack facts.
+  - [x] 2.4 Add `agent/tools/district_need.py` and `agent/tools/draft_memo.py`, each with a model-facing docstring and Pydantic contracts; keep redirects explicitly non-financial.
   - [~] 2.5 Implement post-processing validator logic that enforces geographic/time/district severity constraints, conservative missing-date behavior, evidence consolidation, bounded confidence, and the duplicate-to-overlapping downgrade plus audit event.
   - [~] 2.6 Add unit tests for each tool and every taxonomy rule, including city mismatch, known/unknown districts, missing/boundary dates, shared beneficiaries, concrete outputs, and duplicate evidence downgrade.
   - [~] 2.7 Add required Hypothesis properties for overlap symmetry, cross-city final-label exclusion, duplicate evidence minimum, and verdict label/confidence closure.

@@ -57,6 +57,16 @@
         "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
         "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
         "timestamp": 1791522298634
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523286372
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523388864
       }
     ],
     "2.1 Add `agent/tools/search_similar_projects.py` with a model-facing docstring, Pydantic input/output, `k <= 8` enforcement, and shared retrieval delegation returning IDs/scores only.": [
@@ -64,6 +74,16 @@
         "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
         "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
         "timestamp": 1791522298668
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523286451
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523388982
       }
     ],
     "2.2 Add `agent/tools/get_project.py` with a model-facing docstring, Pydantic input/output, canonical lookup, provenance preservation, and typed not-found failure.": [
@@ -71,6 +91,16 @@
         "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
         "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
         "timestamp": 1791522298700
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523286534
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523389209
       }
     ],
     "2.3 Add `agent/tools/check_overlap.py` with a model-facing docstring and deterministic canonical city/district, sector/beneficiary, concrete-output, and inclusive 12-month date-slack facts.": [
@@ -78,6 +108,16 @@
         "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
         "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
         "timestamp": 1791522298733
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523286647
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523389417
       }
     ],
     "2.4 Add `agent/tools/district_need.py` and `agent/tools/draft_memo.py`, each with a model-facing docstring and Pydantic contracts; keep redirects explicitly non-financial.": [
@@ -85,6 +125,16 @@
         "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
         "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
         "timestamp": 1791522298767
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523286708
+      },
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523389450
       }
     ],
     "2.5 Implement post-processing validator logic that enforces geographic/time/district severity constraints, conservative missing-date behavior, evidence consolidation, bounded confidence, and the duplicate-to-overlapping downgrade plus audit event.": [
@@ -295,6 +345,13 @@
         "executionId": "14e5d56c-43a1-4b70-bd32-7881712afc61",
         "chatSessionId": "sess_d27a7413-0a6e-4dd2-9b13-f0a0dbe42697",
         "timestamp": 1791522299873
+      }
+    ],
+    "1. Establish shared clash-review contracts and storage": [
+      {
+        "executionId": "258a976e-8f6b-45a2-b420-cb9352fca26e",
+        "chatSessionId": "sess_5a32936a-2bf1-4ab6-b18b-917edee92953",
+        "timestamp": 1791523388945
       }
     ]
   }
