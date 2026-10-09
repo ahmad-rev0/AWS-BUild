@@ -1,0 +1,44 @@
+{
+  "scenario_key": "demo-city-transit-01",
+  "proposal_id": "demo-proposal-01",
+  "proposal": {
+    "title": "Demo City accessible transit corridor",
+    "description": "Seeded demonstration proposal for accessible bus corridor stops serving commuters in the high-need district.",
+    "city_id": "atlas11-demo-city",
+    "district_id": "atlas11-demo-district-high",
+    "sector": "Urban Transport",
+    "budget_usd": "24000000",
+    "start_date": "2026-01-01",
+    "end_date": "2028-12-31",
+    "scenario_key": "demo-city-transit-01",
+    "source": "seeded",
+    "source_url": "seeded://atlas11/demo-city-transit-01"
+  },
+  "report": {
+    "proposal_id": "demo-proposal-01",
+    "candidates": [
+      {
+        "project_id": "seeded-demo-transit-corridor",
+        "label": "OVERLAPPING",
+        "confidence": 0.89,
+        "matching_attributes": ["city:atlas11-demo-city", "district:atlas11-demo-district-high", "shared commuter beneficiaries"],
+        "reasoning": "Both initiatives serve commuters in the same demo district and period; coordinate corridor scope and procurement."
+      },
+      {
+        "project_id": "seeded-demo-accessibility-link",
+        "label": "COMPLEMENTARY",
+        "confidence": 0.84,
+        "matching_attributes": ["accessible transit", "different feeder route"],
+        "reasoning": "The feeder-route accessibility work reinforces the proposal without duplicating its corridor outputs."
+      }
+    ],
+    "memo": {
+      "recommendation": "CO_FINANCE",
+      "summary": "Coordination recommendation only: co-finance compatible corridor components and focus coordination discussion on the high-need district; this does not allocate or move funding.",
+      "redirect_district_id": "atlas11-demo-district-high"
+    },
+    "model_id": "cached-demo",
+    "latency_ms": 0,
+    "source": "seeded"
+  }
+}

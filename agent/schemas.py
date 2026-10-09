@@ -222,6 +222,8 @@ class ProposalCreate(CanonicalContract):
     end_date: date | None = None
     scenario_key: str | None = None
     source: Literal["seeded", "user"] = "user"
+    # Demo provenance accepts the intentional seeded:// URI; it is not an HTTP URL.
+    source_url: str | None = None
 
     @model_validator(mode="after")
     def dates_are_ordered(self) -> "ProposalCreate":
@@ -280,13 +282,13 @@ class Memo(CanonicalContract):
 
     @model_validator(mode="after")
     def redirect_has_redirect_recommendation(self) -> "Memo":
-        """Allow a redirect district only when redirecting coordination focus."""
-        if (
-            self.redirect_district_id is not None
-            and self.recommendation is not Recommendation.REDIRECT
-        ):
+        """Allow an optional coordination-focus district for redirect/co-finance memos."""
+        if self.redirect_district_id is not None and self.recommendation not in {
+            Recommendation.REDIRECT,
+            Recommendation.CO_FINANCE,
+        }:
             raise ValueError(
-                "redirect_district_id is only allowed for REDIRECT recommendations"
+                "redirect_district_id is only allowed for REDIRECT or CO_FINANCE recommendations"
             )
         return self
 
@@ -300,6 +302,14 @@ class ClashReport(CanonicalContract):
     model_id: str = Field(min_length=1)
     latency_ms: int = Field(ge=0)
     source: Literal["live", "seeded"]
+
+
+class ReviewReportResponse(CanonicalContract):
+    """Validated API envelope joining a completed report and persisted proposal."""
+
+    review_id: str = Field(min_length=1)
+    proposal: Proposal
+    report: ClashReport
 
 
 class ApprovalCreate(CanonicalContract):

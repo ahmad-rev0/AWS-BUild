@@ -51,6 +51,11 @@ class SQLiteStore:
         with self._connect() as connection:
             connection.executescript(
                 """
+                CREATE TABLE IF NOT EXISTS schema_versions (
+                    version INTEGER PRIMARY KEY,
+                    applied_at TEXT NOT NULL
+                );
+
                 CREATE TABLE IF NOT EXISTS proposals (
                     proposal_id TEXT PRIMARY KEY,
                     status TEXT NOT NULL,
@@ -104,6 +109,9 @@ class SQLiteStore:
                     ON audit_events(review_id);
                 """
             )
+            connection.execute(
+                "INSERT OR IGNORE INTO schema_versions(version, applied_at) VALUES (1, datetime('now'))"
+            )
 
     def create_proposal(self, proposal: Proposal, audit_event: AuditEvent) -> Proposal:
         """Insert a submitted proposal and its intake audit event atomically."""
@@ -139,6 +147,19 @@ class SQLiteStore:
         )
         if row is None:
             raise StoreNotFoundError("Proposal not found.")
+        payload = json.loads(row["payload_json"])
+        payload["status"] = row["status"]
+        return self._model("Proposal").model_validate(payload)
+
+    def get_proposal_for_review(self, review_id: str) -> Proposal:
+        """Return the proposal associated with a review using validated stored JSON."""
+        row = self._fetchone(
+            """SELECT p.status, p.payload_json FROM proposals p
+               JOIN reviews r ON r.proposal_id = p.proposal_id WHERE r.review_id = ?""",
+            (review_id,),
+        )
+        if row is None:
+            raise StoreNotFoundError("Review not found.")
         payload = json.loads(row["payload_json"])
         payload["status"] = row["status"]
         return self._model("Proposal").model_validate(payload)
