@@ -86,6 +86,26 @@ class SQLiteStore:
                     decided_at TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS catalog_commitments (
+                    commitment_id TEXT PRIMARY KEY,
+                    country TEXT NOT NULL,
+                    city TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    amount_usd TEXT NOT NULL,
+                    project_ids TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS assignments (
+                    assignment_id TEXT PRIMARY KEY,
+                    proposal_id TEXT NOT NULL REFERENCES proposals(proposal_id),
+                    district_id TEXT NOT NULL,
+                    amount_usd TEXT NOT NULL,
+                    actor TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    assigned_at TEXT NOT NULL
+                );
+
                 CREATE TABLE IF NOT EXISTS audit_events (
                     event_id TEXT PRIMARY KEY,
                     event_type TEXT NOT NULL,
@@ -318,6 +338,158 @@ class SQLiteStore:
             ).fetchall()
         audit_model = self._model("AuditEvent")
         return [audit_model.model_validate(dict(row)) for row in rows]
+
+    def reset_proposal(self, proposal_id: str) -> None:
+        """Delete one proposal and its reviews, decisions, and audit rows."""
+        with self._transaction() as connection:
+            connection.execute(
+                "DELETE FROM audit_events WHERE proposal_id = ?", (proposal_id,)
+            )
+            connection.execute(
+                "DELETE FROM assignments WHERE proposal_id = ?", (proposal_id,)
+            )
+            connection.execute(
+                "DELETE FROM approvals WHERE proposal_id = ?", (proposal_id,)
+            )
+            connection.execute(
+                "DELETE FROM reviews WHERE proposal_id = ?", (proposal_id,)
+            )
+            connection.execute(
+                "DELETE FROM proposals WHERE proposal_id = ?", (proposal_id,)
+            )
+
+    def latest_review_id(self, proposal_id: str) -> str | None:
+        """Return the newest review id for a proposal, completed or still pending."""
+        row = self._fetchone(
+            """
+            SELECT review_id FROM reviews
+            WHERE proposal_id = ?
+            ORDER BY COALESCE(completed_at, created_at) DESC, review_id DESC
+            LIMIT 1
+            """,
+            (proposal_id,),
+        )
+        if row is None:
+            return None
+        return str(row["review_id"])
+
+    def assign_budget(self, assignment: Any, audit_event: AuditEvent) -> Any:
+        """Place a proposal's own budget on one district, replacing any earlier choice."""
+        payload = self._dump(assignment)
+        with self._transaction() as connection:
+            proposal = connection.execute(
+                "SELECT status FROM proposals WHERE proposal_id = ?",
+                (payload["proposal_id"],),
+            ).fetchone()
+            if proposal is None:
+                raise StoreNotFoundError("Proposal not found.")
+            if proposal["status"] not in {"REVIEWED", "APPROVED"}:
+                raise StoreConflictError(
+                    "Review the proposal before committing its budget to a district."
+                    if proposal["status"] == "SUBMITTED"
+                    else "A rejected proposal cannot be committed to a district."
+                )
+            connection.execute(
+                "DELETE FROM assignments WHERE proposal_id = ?",
+                (payload["proposal_id"],),
+            )
+            connection.execute(
+                """
+                INSERT INTO assignments(
+                    assignment_id, proposal_id, district_id, amount_usd, actor, role, assigned_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    payload["assignment_id"],
+                    payload["proposal_id"],
+                    payload["district_id"],
+                    payload["amount_usd"],
+                    payload["actor"],
+                    self._enum_value(payload["role"]),
+                    payload["assigned_at"],
+                ),
+            )
+            self._insert_audit(connection, audit_event)
+        return assignment
+
+    def save_catalog_commitment(
+        self,
+        commitment_id: str,
+        country: str,
+        city: str,
+        title: str,
+        amount_usd: str,
+        project_ids: list[str],
+        created_at: str,
+    ) -> None:
+        """Store the latest decision to direct a proposal budget toward a World Bank city."""
+        with self._transaction() as connection:
+            connection.execute(
+                """
+                INSERT INTO catalog_commitments(
+                    commitment_id, country, city, title, amount_usd, project_ids, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    commitment_id,
+                    country,
+                    city,
+                    title,
+                    amount_usd,
+                    json.dumps(project_ids),
+                    created_at,
+                ),
+            )
+
+    def latest_catalog_commitment(self) -> dict[str, Any] | None:
+        """Return the newest directed-budget record, if one exists."""
+        row = self._fetchone(
+            """
+            SELECT commitment_id, country, city, title, amount_usd, project_ids, created_at
+            FROM catalog_commitments
+            ORDER BY created_at DESC, commitment_id DESC
+            LIMIT 1
+            """,
+            (),
+        )
+        if row is None:
+            return None
+        payload = dict(row)
+        payload["project_ids"] = json.loads(str(payload["project_ids"]))
+        return payload
+
+    def latest_assignment_for_proposal(self, proposal_id: str) -> Any:
+        """Return the district currently holding this proposal's budget."""
+        row = self._fetchone(
+            """
+            SELECT assignment_id, proposal_id, district_id, amount_usd, actor, role, assigned_at
+            FROM assignments
+            WHERE proposal_id = ?
+            ORDER BY assigned_at DESC, assignment_id DESC
+            LIMIT 1
+            """,
+            (proposal_id,),
+        )
+        if row is None:
+            return None
+        return self._model("Assignment").model_validate(dict(row))
+
+    def latest_approval_for_proposal(self, proposal_id: str) -> Any:
+        """Return the newest coordination decision recorded for a proposal."""
+        row = self._fetchone(
+            """
+            SELECT approval_id, review_id, proposal_id, actor, role, decision,
+                   decided_at, reason
+            FROM approvals
+            WHERE proposal_id = ?
+            ORDER BY decided_at DESC, approval_id DESC
+            LIMIT 1
+            """,
+            (proposal_id,),
+        )
+        if row is None:
+            return None
+        return self._model("Approval").model_validate(dict(row))
 
     @contextmanager
     def _transaction(self) -> Iterator[sqlite3.Connection]:

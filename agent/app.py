@@ -11,8 +11,18 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
+from agent.catalog import (
+    CatalogCompareRequest,
+    CatalogCompareResponse,
+    CatalogProject,
+    CatalogSummary,
+    CatalogUnavailableError,
+    compare_catalog,
+    list_projects,
+    summary as catalog_summary,
+)
 from agent.gaps import (
     GapDataUnavailableError,
     GapRecordNotFoundError,
@@ -22,6 +32,8 @@ from agent.gaps import (
 from agent.schemas import (
     Approval,
     ApprovalCreate,
+    Assignment,
+    AssignmentCreate,
     AuditEvent,
     ClashReport,
     DistrictNeedRecord,
@@ -41,7 +53,13 @@ DATABASE_PATH = Path(os.getenv("ATLAS11_DB_PATH", str(ROOT / "data" / "atlas11.d
 app = FastAPI(title="Atlas11 API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
+    ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -131,6 +149,50 @@ def create_proposal(item: ProposalCreate) -> Proposal:
         )
     except StoreConflictError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+class ProposalWorkspace(BaseModel):
+    """A proposal plus the latest review, report, decision, and district commitment."""
+
+    proposal: Proposal
+    review_id: str | None = None
+    report: ClashReport | None = None
+    approval: Approval | None = None
+    assignment: Assignment | None = None
+
+
+DEMO_PROPOSAL_ID = "demo-proposal-01"
+
+
+@app.post("/demo/reset", status_code=status.HTTP_204_NO_CONTENT)
+def reset_demo() -> None:
+    """Clear only the scripted demo proposal so the walkthrough can be repeated."""
+    store.reset_proposal(DEMO_PROPOSAL_ID)
+
+
+@app.get("/proposals/{proposal_id}", response_model=ProposalWorkspace)
+def get_proposal_workspace(proposal_id: str) -> ProposalWorkspace:
+    """Reopen a stored proposal without creating a second cached submission."""
+    try:
+        proposal = store.get_proposal(proposal_id)
+    except StoreNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    review_id = store.latest_review_id(proposal_id)
+    report = None
+    if review_id is not None:
+        try:
+            report = store.get_completed_report(review_id)
+        except StoreConflictError:
+            report = None
+        except StoreNotFoundError:
+            review_id = None
+    return ProposalWorkspace(
+        proposal=proposal,
+        review_id=review_id,
+        report=report,
+        approval=store.latest_approval_for_proposal(proposal_id),
+        assignment=store.latest_assignment_for_proposal(proposal_id),
+    )
 
 
 @app.post(
@@ -290,6 +352,51 @@ def create_approval(item: ApprovalCreate) -> Approval:
         raise HTTPException(status_code=409, detail=str(error)) from error
 
 
+@app.post(
+    "/proposals/{proposal_id}/assignment",
+    response_model=Assignment,
+    status_code=status.HTTP_201_CREATED,
+)
+def assign_proposal_budget(proposal_id: str, item: AssignmentCreate) -> Assignment:
+    """Record this proposal's budget on the district the approver chooses."""
+    if item.role is not Role.APPROVER:
+        raise HTTPException(
+            status_code=403,
+            detail="Only an approver may commit a proposal budget to a district.",
+        )
+    try:
+        get_gap_record(item.district_id)
+        proposal = store.get_proposal(proposal_id)
+    except GapRecordNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except StoreNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    assignment = Assignment(
+        assignment_id=f"assignment-{uuid4().hex[:12]}",
+        proposal_id=proposal.proposal_id,
+        district_id=item.district_id,
+        amount_usd=proposal.budget_usd,
+        actor=item.actor,
+        role=item.role,
+        assigned_at=_now(),
+    )
+    audit = _audit(
+        "budget_assigned",
+        proposal.proposal_id,
+        actor=item.actor,
+        role=item.role,
+    )
+    audit.payload_summary = (
+        f"Committed {proposal.budget_usd} from {proposal.proposal_id} to {item.district_id}."
+    )
+    try:
+        return store.assign_budget(assignment, audit)
+    except StoreNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except StoreConflictError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
 @app.get("/audit", response_model=list[AuditEvent])
 def get_audit(
     proposal_id: str | None = None, review_id: str | None = None
@@ -309,5 +416,43 @@ def get_gaps(
         )
     except GapRecordNotFoundError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+def _catalog_error(error: CatalogUnavailableError) -> HTTPException:
+    return HTTPException(status_code=503, detail=str(error))
+
+
+@app.get("/catalog", response_model=CatalogSummary)
+def get_catalog() -> CatalogSummary:
+    """Summarize the local World Bank Projects API snapshot by country and named city."""
+    try:
+        return catalog_summary()
+    except CatalogUnavailableError as error:
+        raise _catalog_error(error) from error
+
+
+@app.get("/catalog/projects", response_model=list[CatalogProject])
+def get_catalog_projects(
+    country: str | None = None,
+    city: str | None = None,
+    unplaced: bool = False,
+    limit: int = 12,
+) -> list[CatalogProject]:
+    """List World Bank project records. Rows without a city are included only when unplaced=true."""
+    try:
+        return list_projects(country, city, unplaced, max(1, min(limit, 40)))
+    except CatalogUnavailableError as error:
+        raise _catalog_error(error) from error
+
+
+@app.post("/catalog/compare", response_model=CatalogCompareResponse)
+def post_catalog_compare(payload: CatalogCompareRequest) -> CatalogCompareResponse:
+    """Match proposal text to real World Bank records. This does not start the scripted review."""
+    try:
+        return compare_catalog(payload)
+    except CatalogUnavailableError as error:
+        raise _catalog_error(error) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     except GapDataUnavailableError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error

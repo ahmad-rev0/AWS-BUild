@@ -61,6 +61,13 @@ def main() -> None:
         },
     )
     assert decision.status_code == 201, decision.text
+    workspace = client.get(f"/proposals/{proposal_id}")
+    assert workspace.status_code == 200, workspace.text
+    reopened = workspace.json()
+    assert reopened["review_id"] == review_id
+    assert reopened["approval"]["decision"] == "APPROVED"
+    assert reopened["report"]["memo"]["recommendation"] == "CO_FINANCE"
+    assert client.get("/proposals/missing-proposal").status_code == 404
     assert (
         client.get(
             "/gaps", params={"district_id": report["memo"]["redirect_district_id"]}

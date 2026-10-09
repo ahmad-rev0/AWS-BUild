@@ -2,3 +2,15 @@
 [     745ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5173/favicon.ico:0
 [   80014ms] [ERROR] Access to fetch at 'http://localhost:8000/proposals' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:5173/:0
 [   80015ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/proposals:0
+[  544996ms] [ERROR] Access to fetch at 'http://localhost:8000/proposals' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:5173/:0
+[  544996ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/proposals:0
+[  547827ms] [ERROR] Access to fetch at 'http://localhost:8000/proposals' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:5173/:0
+[  547827ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/proposals:0
+[  547992ms] [ERROR] Access to fetch at 'http://localhost:8000/proposals' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:5173/:0
+[  547992ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/proposals:0
+[  548191ms] [ERROR] Access to fetch at 'http://localhost:8000/proposals' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:5173/:0
+[  548192ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/proposals:0
+[  548375ms] [ERROR] Access to fetch at 'http://localhost:8000/proposals' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:5173/:0
+[  548375ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/proposals:0
+[  943379ms] [ERROR] Failed to load resource: net::ERR_SOCKET_NOT_CONNECTED @ http://127.0.0.1:5173/@vite/client:0
+[  943379ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://127.0.0.1:5173/@react-refresh:0

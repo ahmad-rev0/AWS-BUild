@@ -331,8 +331,30 @@ class ApprovalCreate(CanonicalContract):
         return self
 
 
+class AssignmentCreate(CanonicalContract):
+    """Approver choice of the district that receives this proposal's budget."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    district_id: str = Field(min_length=1)
+    actor: str = Field(min_length=1)
+    role: Role
+
+
+class Assignment(CanonicalContract):
+    """The proposal budget recorded on one district. Choosing another district moves it."""
+
+    assignment_id: str = Field(min_length=1)
+    proposal_id: str = Field(min_length=1)
+    district_id: str = Field(min_length=1)
+    amount_usd: Decimal = Field(ge=0)
+    actor: str = Field(min_length=1)
+    role: Role
+    assigned_at: datetime
+
+
 class Approval(CanonicalContract):
-    """Persisted human coordination sign-off; it never represents funding."""
+    """Persisted human coordination sign-off."""
 
     approval_id: str = Field(min_length=1)
     review_id: str = Field(min_length=1)
