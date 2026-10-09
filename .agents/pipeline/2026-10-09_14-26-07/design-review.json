@@ -1,0 +1,40 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "number": 1,
+      "severity": "HIGH",
+      "location": "FastAPI API and Error Model endpoint table; Frontend Architecture / VerdictCard",
+      "problem": "GET /reviews/{review_id} is specified to return both a bare ClashReport and a ReviewReportResponse envelope.",
+      "fix": "Choose ReviewReportResponse { report: ClashReport, candidates: list[ReviewCandidateDetail] } as the sole response model and update the endpoint table, server, parser, and tests."
+    },
+    {
+      "number": 2,
+      "severity": "HIGH",
+      "location": "Cached Demo Service; FastAPI API and Error Model",
+      "problem": "Review execution is assigned to the events stream, while cache/provider errors are assigned to POST review creation; concurrent pending stream and replay/failure behavior is undefined.",
+      "fix": "Persist PENDING/RUNNING/COMPLETED/FAILED state and atomically claim execution; define POST, concurrent stream, completed replay, and failed-review terminal behavior consistently."
+    },
+    {
+      "number": 3,
+      "severity": "MEDIUM",
+      "location": "Shared Contracts and Persistence; Data Pipeline, Providers, and Retrieval; Cached Demo Service",
+      "problem": "Regex-shaped canonical IDs are not validated against an authoritative city, district, or project registry, despite unknown-ID requirements.",
+      "fix": "Define read-only validated district/project registries, city-ID semantics, endpoint rejection statuses, and cache-reference validation rules."
+    },
+    {
+      "number": 4,
+      "severity": "MEDIUM",
+      "location": "Data Pipeline, Providers, and Retrieval",
+      "problem": "The final retrieval filter names, date-window shape, one-sided-window semantics, and validation responses are unspecified.",
+      "fix": "Define one Pydantic SearchRequest with k <= 8, city_id, optional district_id, sector, and named implementation_start/implementation_end fields plus explicit interval rules."
+    },
+    {
+      "number": 5,
+      "severity": "MEDIUM",
+      "location": "Shared Contracts and Persistence; Cached Demo Service",
+      "problem": "The canonical cache proposal identity/content guard and fingerprint serialization are not defined.",
+      "fix": "Store the exact ProposalCreate and a documented SHA-256 canonical JSON fingerprint in the cache; require exact equality before assigning demo-proposal-01 and test altered/missing fields."
+    }
+  ]
+}
