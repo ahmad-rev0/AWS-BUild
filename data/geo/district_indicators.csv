@@ -1,0 +1,3 @@
+district_id,district_name,population,population_density,informal_settlement_share,flood_exposure,transport_access_gap,indicator_quality,source,source_url
+atlas11-demo-district-low,Atlas11 Demo District Low,1000,0,0,0,0,illustrative,seeded,local://data/geo/district_indicators.csv
+atlas11-demo-district-high,Atlas11 Demo District High,1000,1,1,1,1,illustrative,seeded,local://data/geo/district_indicators.csv

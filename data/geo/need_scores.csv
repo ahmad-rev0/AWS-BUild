@@ -1,0 +1,3 @@
+district_id,district_name,need_score,funded_commitments_usd,commitments_per_capita,funding_gap,indicator_quality,snapshot_date,source,source_url
+atlas11-demo-district-low,Atlas11 Demo District Low,0.0,0,0.0,false,illustrative,,seeded,local://data/geo/district_indicators.csv
+atlas11-demo-district-high,Atlas11 Demo District High,1.0,0,0.0,true,illustrative,,seeded,local://data/geo/district_indicators.csv
