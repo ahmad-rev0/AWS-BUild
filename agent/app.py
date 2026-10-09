@@ -14,6 +14,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError
 
 from agent.catalog import (
+    CatalogCommitRequest,
+    CatalogCommitment,
     CatalogCompareRequest,
     CatalogCompareResponse,
     CatalogProject,
@@ -21,6 +23,8 @@ from agent.catalog import (
     CatalogUnavailableError,
     compare_catalog,
     list_projects,
+    named_city,
+    projects_by_ids,
     summary as catalog_summary,
 )
 from agent.gaps import (
@@ -456,3 +460,64 @@ def post_catalog_compare(payload: CatalogCompareRequest) -> CatalogCompareRespon
         raise HTTPException(status_code=422, detail=str(error)) from error
     except GapDataUnavailableError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+def _commitment_from_row(row: dict[str, object]) -> CatalogCommitment:
+    project_ids = row["project_ids"]
+    ids = project_ids if isinstance(project_ids, list) else []
+    clean_ids = [str(item) for item in ids]
+    return CatalogCommitment(
+        commitment_id=str(row["commitment_id"]),
+        country=str(row["country"]),
+        city=str(row["city"]),
+        title=str(row["title"]),
+        amount_usd=str(row["amount_usd"]),
+        project_ids=clean_ids,
+        created_at=str(row["created_at"]),
+        projects=projects_by_ids(clean_ids),
+    )
+
+
+@app.post("/catalog/commit", response_model=CatalogCommitment, status_code=status.HTTP_201_CREATED)
+def commit_catalog(item: CatalogCommitRequest) -> CatalogCommitment:
+    """Direct a proposal budget to a city named in the World Bank snapshot."""
+    try:
+        city = named_city(item.country, item.city)
+        projects = projects_by_ids(item.project_ids)
+    except CatalogUnavailableError as error:
+        raise _catalog_error(error) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    commitment_id = f"commit-{uuid4().hex[:12]}"
+    created_at = _now().isoformat()
+    store.save_catalog_commitment(
+        commitment_id,
+        city.country,
+        city.city,
+        item.title.strip(),
+        format(item.amount_usd, "f"),
+        [project.project_id for project in projects],
+        created_at,
+    )
+    return CatalogCommitment(
+        commitment_id=commitment_id,
+        country=city.country,
+        city=city.city,
+        title=item.title.strip(),
+        amount_usd=format(item.amount_usd, "f"),
+        project_ids=[project.project_id for project in projects],
+        created_at=created_at,
+        projects=projects,
+    )
+
+
+@app.get("/catalog/commitment", response_model=CatalogCommitment)
+def get_catalog_commitment() -> CatalogCommitment:
+    """Return the newest budget directed at a World Bank city."""
+    row = store.latest_catalog_commitment()
+    if row is None:
+        raise HTTPException(status_code=404, detail="No budget has been directed to a World Bank city yet.")
+    try:
+        return _commitment_from_row(row)
+    except CatalogUnavailableError as error:
+        raise _catalog_error(error) from error

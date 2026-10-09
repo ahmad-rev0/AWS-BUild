@@ -16,6 +16,7 @@ export default defineConfig({
       "/audit": { target: api, changeOrigin: true },
       "/gaps": { target: api, changeOrigin: true },
       "/demo": { target: api, changeOrigin: true },
+      "/catalog": { target: api, changeOrigin: true },
     },
   },
 });
